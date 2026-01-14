@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScoutPass | War Room V16</title>
+    <title>ScoutPass | War Room V17</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#5285E8">
@@ -23,27 +23,35 @@
         .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: var(--sidebar-width); background: var(--white); border-right: 1px solid rgba(0,0,0,0.05); padding: 25px; z-index: 1000; }
         .nav-link { color: #6c757d; font-weight: 500; padding: 12px 15px; border-radius: 12px; margin-bottom: 8px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s; }
         .nav-link:hover, .nav-link.active { background: rgba(82, 133, 232, 0.1); color: var(--primary-blue); font-weight: 600; }
-        .main-content { margin-left: var(--sidebar-width); padding: 30px; }
+        .main-content { margin-left: var(--sidebar-width); padding: 30px; padding-bottom: 100px; }
         .stat-card { background: var(--white); border-radius: 20px; padding: 25px; border: 1px solid rgba(0,0,0,0.02); box-shadow: 0 4px 20px rgba(0,0,0,0.03); height: 100%; transition: transform 0.2s; }
         .stat-card:hover { transform: translateY(-2px); }
         .card-number { font-size: 2.5rem; font-weight: 700; color: var(--text-dark); margin-bottom: 0; }
         .live-stat-val { font-size: 2rem; font-weight: 800; line-height: 1; transition: color 0.3s; }
         .admin-only { display: block; }
         #qr-hidden { display: none; }
+        
+        /* DEBUG BOX */
+        #debugBox { position: fixed; bottom: 0; right: 0; width: 100%; height: 150px; background: #000; color: #0f0; font-family: monospace; font-size: 10px; padding: 10px; overflow-y: scroll; z-index: 9999; display: none; opacity: 0.8; }
     </style>
 </head>
 <body>
 
 <div id="qr-hidden"></div>
 
+<div style="position: fixed; bottom: 10px; right: 10px; z-index: 10000;">
+    <button onclick="document.getElementById('debugBox').style.display = document.getElementById('debugBox').style.display === 'none' ? 'block' : 'none'" class="btn btn-sm btn-dark">🐞 Debug</button>
+</div>
+<div id="debugBox">Waiting for data stream...</div>
+
 <div class="sidebar">
     <h3 class="fw-bold mb-4">Scout<span style="color:var(--primary-blue)">Pass</span></h3>
-    <div class="nav-link active" onclick="showSection('dashboard', this)"><i class="bi bi-grid-1x2-fill"></i> War Room</div>
-    <div class="nav-link" onclick="showSection('search', this)"><i class="bi bi-search"></i> Scout Search</div>
-    <div class="nav-link" onclick="showSection('registration', this)"><i class="bi bi-person-vcard-fill"></i> Registration</div>
-    <div class="nav-link" onclick="showSection('events', this)"><i class="bi bi-calendar-check-fill"></i> Events</div>
-    <div class="nav-link admin-only" onclick="showSection('staff', this)"><i class="bi bi-people-fill"></i> Staff Manager</div>
-    <div class="nav-link admin-only" onclick="showSection('settings', this)"><i class="bi bi-sliders"></i> Settings</div>
+    <div class="nav-link active" onclick="showSection('dashboard', this)"><i class="bi bi-grid-1x2-fill me-2"></i> War Room</div>
+    <div class="nav-link" onclick="showSection('search', this)"><i class="bi bi-search me-2"></i> Search</div>
+    <div class="nav-link" onclick="showSection('registration', this)"><i class="bi bi-person-vcard-fill me-2"></i> Registration</div>
+    <div class="nav-link" onclick="showSection('events', this)"><i class="bi bi-calendar-check-fill me-2"></i> Events</div>
+    <div class="nav-link admin-only" onclick="showSection('staff', this)"><i class="bi bi-people-fill me-2"></i> Staff</div>
+    <div class="nav-link admin-only" onclick="showSection('settings', this)"><i class="bi bi-sliders me-2"></i> Settings</div>
     <div class="mt-auto pt-4 border-top">
         <div class="nav-link text-danger" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Logout</div>
     </div>
@@ -62,7 +70,7 @@
             <div class="col-md-3"><div class="stat-card"><h6>Events</h6><h1 class="card-number text-primary" id="statEventsCount">0</h1></div></div>
         </div>
         <h5 class="fw-bold text-muted mb-3">Live Activity Feed</h5>
-        <div class="row g-3" id="liveEventCards"><div class="col-12 text-center text-muted py-5">Connecting to live feed...</div></div>
+        <div class="row g-3" id="liveEventCards"><div class="col-12 text-center text-muted py-5">Syncing data...</div></div>
     </div>
 
     <div id="sec-search" class="section animate__animated animate__fadeIn" style="display:none;">
@@ -155,11 +163,23 @@
     import { getAuth, signOut, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getDatabase, ref, onValue, set, get, update, push, remove, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+    // CONFIG
     const firebaseConfig = { apiKey: "AIzaSyBZzwTD7gSTmsQhSvQYARZP_bUfKXW4Myg", authDomain: "scoutpak-6fed9.firebaseapp.com", databaseURL: "https://scoutpak-6fed9-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "scoutpak-6fed9", storageBucket: "scoutpak-6fed9.firebasestorage.app", messagingSenderId: "294082875833", appId: "1:294082875833:web:3460d6dd3d501139ba6668" };
-    const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getDatabase(app); const secApp = initializeApp(firebaseConfig, "Secondary"); const secAuth = getAuth(secApp);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+    const secondaryApp = initializeApp(firebaseConfig, "Secondary");
+    const secondaryAuth = getAuth(secondaryApp);
 
     let CURRENT_ROLE = 'scanner';
     let STATE = { events: {}, stats: {} };
+
+    // Debug Logger
+    function logDebug(msg) {
+        const d = document.getElementById('debugBox');
+        const t = new Date().toLocaleTimeString();
+        d.innerHTML = `<div>[${t}] ${msg}</div>` + d.innerHTML;
+    }
 
     // AUTH
     onAuthStateChanged(auth, async u => {
@@ -176,27 +196,37 @@
     });
 
     // =========================================================
-    // 🚀 THE HYBRID ENGINE (V16 Core)
+    // 🚀 THE UNIVERSAL RECEIVER (V17 Core)
     // =========================================================
     
+    // 1. Fetch Events
     onValue(ref(db, 'events'), snap => {
         STATE.events = snap.val() || {};
+        logDebug(`Events Loaded: ${Object.keys(STATE.events).length}`);
         renderDashboard(); 
         renderEventsList();
     });
 
+    // 2. Fetch Stats
     onValue(ref(db, 'stats'), snap => {
         STATE.stats = snap.val() || {};
+        
+        // Log Raw Stats for Debugging
+        logDebug(`Stats Update: Total=${STATE.stats.total_scans || 0}`);
+        if(STATE.stats.events) logDebug(`Event Stats Keys: ${Object.keys(STATE.stats.events).join(', ')}`);
+
+        // Update Global Counters
         document.getElementById('statRegCount').innerText = STATE.stats.total_registered || 0;
         document.getElementById('statTotalScans').innerText = STATE.stats.total_scans || 0;
         document.getElementById('statInside').innerText = STATE.stats.present_now || 0;
-        renderDashboard();
+
+        // Force Re-render
+        renderDashboard(); 
     });
 
     function renderDashboard() {
         const container = document.getElementById('liveEventCards');
         container.innerHTML = '';
-        
         const eventKeys = Object.keys(STATE.events);
         document.getElementById('statEventsCount').innerText = eventKeys.length;
 
@@ -210,17 +240,39 @@
         eventKeys.forEach(id => {
             const evt = STATE.events[id];
             
-            // 🔥 HYBRID LOOKUP: Try finding data by ID first, then by Name
-            // This fixes the issue where Scanner might write to Name but Admin looks for ID
-            const stat = eventStats[id] || eventStats[evt.name] || { in: 0, out: 0, completed: 0 };
+            // 🔥 THE UNIVERSAL MATCHER 🔥
+            // 1. Try Match by ID (New Scanner)
+            // 2. Try Match by Name (Old Scanner)
+            // 3. Try Match by Clean Name (Just in case)
+            let stat = eventStats[id];
+            
+            if (!stat) {
+                // Fallback: Loop through all stats to find a match by NAME
+                const matchingKey = Object.keys(eventStats).find(k => k === evt.name || k.trim() === evt.name.trim());
+                if(matchingKey) stat = eventStats[matchingKey];
+            }
+
+            // Default if no match found
+            stat = stat || { in: 0, out: 0, completed: 0 };
             
             let html = '';
             if(evt.type === 'ACCESS') {
                 const inC = parseInt(stat.in) || 0;
                 const outC = parseInt(stat.out) || 0;
-                html = `<div class="row text-center mt-3 g-0"><div class="col-4 border-end"><div class="live-stat-val text-success">${inC}</div><small class="text-muted fw-bold">IN</small></div><div class="col-4 border-end"><div class="live-stat-val text-danger">${outC}</div><small class="text-muted fw-bold">OUT</small></div><div class="col-4"><div class="live-stat-val text-primary">${inC - outC}</div><small class="text-muted fw-bold">NET</small></div></div>`;
+                const netC = inC - outC;
+                
+                html = `
+                <div class="row text-center mt-3 g-0">
+                    <div class="col-4 border-end"><div class="live-stat-val text-success">${inC}</div><small class="text-muted fw-bold">IN</small></div>
+                    <div class="col-4 border-end"><div class="live-stat-val text-danger">${outC}</div><small class="text-muted fw-bold">OUT</small></div>
+                    <div class="col-4"><div class="live-stat-val text-primary">${netC}</div><small class="text-muted fw-bold">NET</small></div>
+                </div>`;
             } else {
-                html = `<div class="text-center mt-3"><div class="live-stat-val text-info" style="font-size:2.5rem;">${stat.completed || 0}</div><small class="text-muted fw-bold">COMPLETED</small></div>`;
+                html = `
+                <div class="text-center mt-3">
+                    <div class="live-stat-val text-info" style="font-size:2.5rem;">${stat.completed || 0}</div>
+                    <small class="text-muted fw-bold">COMPLETED</small>
+                </div>`;
             }
 
             container.innerHTML += `<div class="col-md-4"><div class="stat-card p-4 border-top border-4 border-primary shadow-sm h-100"><div class="d-flex justify-content-between"><h5 class="fw-bold mb-0 text-truncate">${evt.name}</h5><span class="badge bg-light text-dark border">${evt.type}</span></div>${html}</div></div>`;
