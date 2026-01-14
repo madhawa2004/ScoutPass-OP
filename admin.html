@@ -3,101 +3,299 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScoutPass | Command Hub V19</title>
+    <title>ScoutPass | Command Hub V22</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#5285E8">
+    <meta name="theme-color" content="#4F46E5">
     <link rel="apple-touch-icon" href="icon-192.png">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+
     <style>
-        :root { --bg:#F0F5F4; --dark:#181818; --blue:#5285E8; --white:#fff; --sb-w:260px; }
-        body { background:var(--bg); color:var(--dark); font-family:'Outfit',sans-serif; overflow-x:hidden; }
-        .sidebar { position:fixed; top:0; left:0; height:100vh; width:var(--sb-w); background:var(--white); padding:25px; z-index:1000; }
-        .main-content { margin-left:var(--sb-w); padding:30px; }
-        .nav-link { padding:12px; border-radius:12px; margin-bottom:8px; cursor:pointer; color:#6c757d; font-weight:500; transition:0.2s; }
-        .nav-link.active, .nav-link:hover { background:rgba(82,133,232,0.1); color:var(--blue); font-weight:600; }
-        .stat-card { background:var(--white); border-radius:20px; padding:25px; box-shadow:0 4px 20px rgba(0,0,0,0.03); height:100%; transition:0.2s; }
-        .stat-card:hover { transform:translateY(-3px); }
-        .live-val { font-size:2rem; font-weight:800; line-height:1; }
-        .admin-only { display:none; } /* Hidden by default */
-        #qr-hidden, #debugBox { display:none; }
+        :root {
+            --primary: #4F46E5; --primary-soft: #EEF2FF;
+            --success: #10B981; --success-soft: #D1FAE5;
+            --danger: #EF4444; --danger-soft: #FEE2E2;
+            --dark: #0F172A; --gray: #64748B; --bg: #F1F5F9; --white: #ffffff;
+            --sidebar-w: 280px;
+        }
+        
+        body { background-color: var(--bg); color: var(--dark); font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
+        
+        /* SIDEBAR */
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: var(--sidebar-w); background: var(--white); border-right: 1px solid #E2E8F0; padding: 30px; z-index: 1000; display: flex; flex-direction: column; }
+        .brand { font-size: 1.5rem; font-weight: 800; color: var(--dark); display: flex; align-items: center; gap: 10px; margin-bottom: 40px; }
+        .brand i { color: var(--primary); font-size: 1.8rem; }
+        
+        .nav-item { padding: 14px 16px; border-radius: 12px; margin-bottom: 8px; cursor: pointer; color: var(--gray); font-weight: 600; display: flex; align-items: center; gap: 12px; transition: all 0.2s ease; }
+        .nav-item:hover { background: var(--bg); color: var(--primary); transform: translateX(5px); }
+        .nav-item.active { background: var(--primary-soft); color: var(--primary); }
+        
+        /* MAIN CONTENT */
+        .main-content { margin-left: var(--sidebar-w); padding: 40px; padding-bottom: 120px; }
+        .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .role-badge { background: var(--dark); color: white; padding: 6px 16px; border-radius: 30px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* CARDS */
+        .stat-card { background: var(--white); border-radius: 24px; padding: 25px; border: 1px solid #F1F5F9; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02); height: 100%; position: relative; overflow: hidden; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05); }
+        .card-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 15px; }
+        .card-val { font-size: 2.5rem; font-weight: 800; line-height: 1; color: var(--dark); margin-bottom: 5px; }
+        .card-lbl { font-size: 0.85rem; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* EVENT CARDS */
+        .event-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        .event-title { font-weight: 700; font-size: 1.1rem; margin-bottom: 2px; }
+        .event-type { font-size: 0.7rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; }
+        .type-ACCESS { background: var(--primary-soft); color: var(--primary); }
+        .type-ACTIVITY { background: var(--success-soft); color: var(--success); }
+        
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 10px; text-align: center; background: var(--bg); padding: 15px; border-radius: 16px; }
+        .grid-item { border-right: 1px solid #CBD5E1; }
+        .grid-item:last-child { border: none; }
+        .stat-num { display: block; font-weight: 800; font-size: 1.4rem; }
+        .stat-txt { font-size: 0.65rem; font-weight: 700; color: var(--gray); text-transform: uppercase; }
+
+        /* BUTTONS */
+        .btn-action { width: 100%; padding: 12px; border-radius: 12px; border: none; font-weight: 700; transition: 0.2s; }
+        .btn-primary-c { background: var(--primary); color: white; } .btn-primary-c:hover { background: #4338CA; }
+        .btn-success-c { background: var(--success); color: white; } .btn-success-c:hover { background: #059669; }
+        .btn-danger-c { background: var(--danger); color: white; } .btn-danger-c:hover { background: #DC2626; }
+
+        /* DEBUGGER */
+        #debugBox { position: fixed; bottom: 0; right: 0; width: 100%; height: 180px; background: #0F172A; color: #10B981; font-family: 'Courier New', monospace; font-size: 11px; padding: 15px; overflow-y: scroll; z-index: 9999; display: none; border-top: 4px solid var(--primary); opacity: 0.95; }
+        .debug-toggle { position: fixed; bottom: 20px; right: 20px; z-index: 10000; border-radius: 50px; padding: 10px 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
+
+        .admin-only { display: none; }
+        #qr-hidden { display: none; }
     </style>
 </head>
 <body>
 
 <div id="qr-hidden"></div>
 
+<button class="btn btn-dark debug-toggle" onclick="toggleDebug()">
+    <i class="bi bi-terminal-fill me-2"></i> Console
+</button>
+<div id="debugBox">
+    <div>> System Initialized...</div>
+</div>
+
 <div class="sidebar">
-    <h3 class="fw-bold mb-4">Scout<span style="color:var(--blue)">Pass</span></h3>
-    <div class="nav-link active" onclick="showSection('dashboard', this)"><i class="bi bi-grid-1x2-fill me-2"></i> War Room</div>
-    <div class="nav-link" onclick="showSection('search', this)"><i class="bi bi-search me-2"></i> Search</div>
-    <div class="nav-link" onclick="showSection('registration', this)"><i class="bi bi-person-vcard-fill me-2"></i> Registration</div>
-    <div class="nav-link" onclick="showSection('events', this)"><i class="bi bi-calendar-check-fill me-2"></i> Events</div>
-    <div class="nav-link admin-only" onclick="showSection('staff', this)"><i class="bi bi-people-fill me-2"></i> Staff</div>
-    <div class="nav-link admin-only" onclick="showSection('settings', this)"><i class="bi bi-sliders me-2"></i> Settings</div>
-    <div class="mt-auto pt-4 border-top">
-        <div class="nav-link text-danger" onclick="logout()"><i class="bi bi-box-arrow-right me-2"></i> Logout</div>
+    <div class="brand"><i class="bi bi-shield-check"></i> ScoutPass</div>
+    <div class="nav-item active" onclick="showSection('dashboard', this)"><i class="bi bi-grid-fill"></i> War Room</div>
+    <div class="nav-item" onclick="showSection('search', this)"><i class="bi bi-search"></i> Search</div>
+    <div class="nav-item" onclick="showSection('registration', this)"><i class="bi bi-person-plus-fill"></i> Registration</div>
+    <div class="nav-item" onclick="showSection('events', this)"><i class="bi bi-calendar-event-fill"></i> Events</div>
+    <div class="nav-item" onclick="showSection('reports', this)"><i class="bi bi-database-fill-gear"></i> Data Center</div>
+    <div class="nav-item admin-only" onclick="showSection('staff', this)"><i class="bi bi-people-fill"></i> Staff</div>
+    <div class="nav-item admin-only" onclick="showSection('settings', this)"><i class="bi bi-gear-fill"></i> Settings</div>
+    
+    <div style="margin-top: auto; border-top: 1px solid #E2E8F0; padding-top: 20px;">
+        <div class="nav-item text-danger" onclick="logout()"><i class="bi bi-box-arrow-left"></i> Logout</div>
     </div>
 </div>
 
 <div class="main-content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div><h3 class="fw-bold mb-0">War Room</h3><small class="text-muted">Role: <span id="userRoleBadge" class="badge bg-secondary">Loading...</span></small></div>
+    <div class="header-area">
+        <div>
+            <h2 class="fw-bold m-0 text-dark">Command Hub</h2>
+            <small class="text-muted">Real-time Monitoring System</small>
+        </div>
+        <span id="userRoleBadge" class="role-badge">Loading...</span>
     </div>
 
     <div id="sec-dashboard" class="section animate__animated animate__fadeIn">
-        <div class="row g-4 mb-4">
-            <div class="col-md-3"><div class="stat-card border-start border-primary border-4"><h6>Registered</h6><h1 class="card-number" id="statRegCount">0</h1></div></div>
-            <div class="col-md-3"><div class="stat-card border-start border-warning border-4"><h6>Total Scans</h6><h1 class="card-number" id="statTotalScans">0</h1></div></div>
-            <div class="col-md-3"><div class="stat-card border-start border-success border-4"><h6>Inside</h6><h1 class="card-number text-success" id="statInside">0</h1></div></div>
-            <div class="col-md-3"><div class="stat-card"><h6>Events</h6><h1 class="card-number text-primary" id="statEventsCount">0</h1></div></div>
+        <div class="row g-4 mb-5">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="card-icon" style="background: var(--primary-soft); color: var(--primary);"><i class="bi bi-people-fill"></i></div>
+                    <div class="card-val" id="statRegCount">0</div>
+                    <div class="card-lbl">Registered Scouts</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="card-icon" style="background: #FEF3C7; color: #D97706;"><i class="bi bi-qr-code-scan"></i></div>
+                    <div class="card-val" id="statTotalScans">0</div>
+                    <div class="card-lbl">Total Scans</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="card-icon" style="background: var(--success-soft); color: var(--success);"><i class="bi bi-geo-alt-fill"></i></div>
+                    <div class="card-val text-success" id="statInside">0</div>
+                    <div class="card-lbl">Inside Camp</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="card-icon" style="background: #E0E7FF; color: #4338CA;"><i class="bi bi-calendar-check"></i></div>
+                    <div class="card-val text-primary" id="statEventsCount">0</div>
+                    <div class="card-lbl">Active Events</div>
+                </div>
+            </div>
         </div>
-        <div class="row g-3" id="liveEventCards"><div class="col-12 text-center text-muted py-5">Initializing data stream...</div></div>
+
+        <h5 class="fw-bold text-dark mb-3"><i class="bi bi-activity me-2"></i>Live Activity Feed</h5>
+        <div class="row g-4" id="liveEventCards">
+            <div class="col-12 text-center text-muted py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2 small fw-bold">Connecting to Satellite...</p>
+            </div>
+        </div>
     </div>
 
     <div id="sec-search" class="section" style="display:none;">
-        <div class="row justify-content-center"><div class="col-md-8"><div class="stat-card text-center">
-            <h5 class="fw-bold mb-4">Find Scout</h5>
-            <div class="input-group mb-3"><input type="text" id="searchInput" class="form-control" placeholder="Enter ID"><button class="btn btn-primary" onclick="performSearch()">Search</button></div>
-            <div id="searchResult" style="display:none"><h3 class="fw-bold" id="resName">-</h3><div class="badge bg-dark mb-3" id="resID">-</div><button class="btn btn-outline-primary" onclick="downloadSingleID()">Download ID</button></div>
-        </div></div></div>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="stat-card text-center">
+                    <h4 class="fw-bold mb-4">Find Scout Profile</h4>
+                    <div class="input-group mb-3">
+                        <input type="text" id="searchInput" class="form-control form-control-lg bg-light border-0" placeholder="Enter ID (e.g., KG001)">
+                        <button class="btn btn-primary-c" onclick="performSearch()">SEARCH</button>
+                    </div>
+                    <div id="searchResult" style="display:none; animation: fadeIn 0.3s;">
+                        <div class="p-4 bg-light rounded-4 mt-3 border">
+                            <h2 class="fw-bold text-dark" id="resName">-</h2>
+                            <span class="badge bg-dark mb-3 fs-6" id="resID">-</span><br>
+                            <button class="btn btn-dark btn-sm mt-2" onclick="downloadSingleID()"><i class="bi bi-download me-2"></i>Download ID Card</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="sec-registration" class="section" style="display:none;">
-        <div class="row">
-            <div class="col-md-5"><div class="stat-card"><h5>Register</h5><textarea id="bulkText" class="form-control mb-3" rows="8" placeholder="ID, Name"></textarea><button class="btn btn-success w-100 mb-2" onclick="processRegistration(true)">Register & Print</button><button class="btn btn-dark w-100" onclick="processRegistration(false)">Register Only</button></div></div>
-            <div class="col-md-7"><div class="stat-card"><h5>Database</h5><button class="btn btn-sm btn-outline-success mb-3" onclick="exportScoutsCSV()">Export CSV</button><div style="max-height:400px;overflow-y:auto"><table class="table table-hover small"><thead><tr><th>ID</th><th>Name</th></tr></thead><tbody id="regPreviewTable"><tr><td colspan="2">Load from Export</td></tr></tbody></table></div></div></div>
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="stat-card">
+                    <h5 class="fw-bold mb-3">Quick Register</h5>
+                    <div class="alert alert-light border small text-muted"><i class="bi bi-info-circle me-1"></i> Format: <b>ID, Name</b> (One per line)</div>
+                    <textarea id="bulkText" class="form-control mb-3 bg-light border-0" rows="8" placeholder="KG001, Kamal Perera"></textarea>
+                    <div class="d-grid gap-2">
+                        <button class="btn-action btn-success-c" onclick="processRegistration(true)">REGISTER & PRINT</button>
+                        <button class="btn-action btn-primary-c" style="background:#334155" onclick="processRegistration(false)">REGISTER ONLY</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="stat-card" style="background:#F8FAFC">
+                    <h5 class="fw-bold mb-3">Tips</h5>
+                    <ul class="text-muted small ps-3">
+                        <li class="mb-2">For bulk uploads (Excel), go to <b>Data Center</b>.</li>
+                        <li class="mb-2">Ensure IDs are unique.</li>
+                        <li>IDs are used for QR generation automatically.</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 
     <div id="sec-events" class="section" style="display:none;">
-        <div class="row">
-            <div class="col-md-4"><div class="stat-card"><h5>New Event</h5><input id="evtName" class="form-control mb-2" placeholder="Name"><select id="evtType" class="form-select mb-3"><option value="ACCESS">Gate</option><option value="ACTIVITY">Activity</option></select><button onclick="addNewEvent()" class="btn btn-primary w-100">Create</button></div></div>
-            <div class="col-md-8"><div class="stat-card"><h5>Active Events</h5><div id="eventsListContainer"></div></div></div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <h5 class="fw-bold mb-3">Create Event</h5>
+                    <label class="small text-muted fw-bold mb-1">Event Name</label>
+                    <input id="evtName" class="form-control mb-3 bg-light border-0" placeholder="e.g. Lunch, Main Gate">
+                    
+                    <label class="small text-muted fw-bold mb-1">Event Type</label>
+                    <select id="evtType" class="form-select mb-3 bg-light border-0">
+                        <option value="ACCESS">Gate (IN/OUT Logic)</option>
+                        <option value="ACTIVITY">Activity (Completion)</option>
+                    </select>
+
+                    <label class="small text-muted fw-bold mb-1">Action Buttons (Comma Separated)</label>
+                    <input id="evtBtns" class="form-control mb-4 bg-light border-0" placeholder="IN,OUT or SCAN">
+                    
+                    <button onclick="addNewEvent()" class="btn-action btn-primary-c">CREATE EVENT</button>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="stat-card">
+                    <h5 class="fw-bold mb-3">Active Event List</h5>
+                    <div id="eventsListContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="sec-reports" class="section" style="display:none;">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="stat-card border-start border-4 border-info">
+                    <h4 class="fw-bold mb-1">Logs & Audit</h4>
+                    <p class="text-muted mb-4">Export full activity history for reporting.</p>
+                    <button onclick="exportLogs()" class="btn-action" style="background:#0EA5E9; color:white;"><i class="bi bi-file-earmark-spreadsheet me-2"></i>DOWNLOAD LOGS (CSV)</button>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="stat-card border-start border-4 border-success">
+                    <h4 class="fw-bold mb-1">Database Manager</h4>
+                    <p class="text-muted mb-4">Backup scout data or Import from Excel/CSV.</p>
+                    <div class="d-flex gap-2">
+                        <button onclick="exportScoutsCSV()" class="btn-action btn-success-c">EXPORT DB</button>
+                        <button onclick="document.getElementById('importFile').click()" class="btn-action" style="background:#0F172A; color:white;">IMPORT DB</button>
+                    </div>
+                    <input type="file" id="importFile" style="display:none" accept=".csv" onchange="handleImport(this)">
+                </div>
+            </div>
         </div>
     </div>
 
     <div id="sec-staff" class="section" style="display:none;">
         <div class="stat-card mb-4">
-            <h5>Add Staff</h5>
+            <h5 class="fw-bold mb-3">Add Staff User</h5>
             <div class="row g-2">
-                <div class="col-md-3"><input id="stfEmail" class="form-control" placeholder="Email"></div>
-                <div class="col-md-3"><input id="stfPass" class="form-control" placeholder="Password"></div>
-                <div class="col-md-3"><select id="stfRole" class="form-select"><option value="scanner">Scanner</option><option value="moderator">Moderator</option><option value="admin">Admin</option></select></div>
-                <div class="col-md-3"><button onclick="addStaffMember()" class="btn btn-success w-100">Add User</button></div>
+                <div class="col-md-3"><input id="stfEmail" class="form-control bg-light border-0" placeholder="Email"></div>
+                <div class="col-md-3"><input id="stfPass" class="form-control bg-light border-0" placeholder="Password"></div>
+                <div class="col-md-3">
+                    <select id="stfRole" class="form-select bg-light border-0">
+                        <option value="scanner">Scanner</option>
+                        <option value="moderator">Moderator</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div class="col-md-3"><button onclick="addStaffMember()" class="btn-action btn-success-c py-2">Create User</button></div>
             </div>
         </div>
-        <div class="stat-card"><h5>Staff List</h5><table class="table"><thead><tr><th>Email</th><th>Role</th><th>Password</th><th>Action</th></tr></thead><tbody id="staffTableBody"></tbody></table></div>
+        <div class="stat-card">
+            <h5 class="fw-bold mb-3">Staff Management</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light"><tr><th>Email</th><th>Role</th><th>Password</th><th>Action</th></tr></thead>
+                    <tbody id="staffTableBody"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <div id="sec-settings" class="section" style="display:none;">
-        <div class="row">
-            <div class="col-md-6"><div class="stat-card border-warning border-start border-4"><h5>Lock System</h5><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="scannerLockSwitch" onchange="toggleScannerLock(this)"> <label>Lock All Scanners</label></div></div></div>
-            <div class="col-md-6"><div class="stat-card border-danger border-start border-4"><h5>Danger Zone</h5><button onclick="initiateSystemReset()" class="btn btn-danger w-100 mt-2">Factory Reset</button></div></div>
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="stat-card border-warning border-top border-4">
+                    <h5 class="fw-bold">Global Lock</h5>
+                    <p class="text-muted small">Prevent scanning on all devices immediately.</p>
+                    <div class="form-check form-switch fs-4">
+                        <input class="form-check-input" type="checkbox" id="scannerLockSwitch" onchange="toggleScannerLock(this)">
+                        <label class="form-check-label fs-6 mt-1 ms-2">Lock System</label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="stat-card border-danger border-top border-4">
+                    <h5 class="fw-bold text-danger">Danger Zone</h5>
+                    <p class="text-muted small">Wipe all data. This cannot be undone.</p>
+                    <button onclick="initiateSystemReset()" class="btn btn-outline-danger w-100 fw-bold">FACTORY RESET SYSTEM</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -110,103 +308,258 @@
     import { getAuth, signOut, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getDatabase, ref, onValue, set, get, update, push, remove, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+    // --- CONFIGURATION ---
     const firebaseConfig = { apiKey: "AIzaSyBZzwTD7gSTmsQhSvQYARZP_bUfKXW4Myg", authDomain: "scoutpak-6fed9.firebaseapp.com", databaseURL: "https://scoutpak-6fed9-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "scoutpak-6fed9", storageBucket: "scoutpak-6fed9.firebasestorage.app", messagingSenderId: "294082875833", appId: "1:294082875833:web:3460d6dd3d501139ba6668" };
-    const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getDatabase(app); const secondaryApp = initializeApp(firebaseConfig, "Secondary"); const secondaryAuth = getAuth(secondaryApp);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+    const secondaryApp = initializeApp(firebaseConfig, "Secondary");
+    const secondaryAuth = getAuth(secondaryApp);
 
     let CURRENT_ROLE = 'scanner';
     let STATE = { events: {}, stats: {} };
 
-    // --- AUTH & INITIALIZATION FLOW (THE FIX) ---
+    // --- DEBUGGER ---
+    window.toggleDebug = () => {
+        const box = document.getElementById('debugBox');
+        box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    };
+
+    function logDebug(msg) {
+        const d = document.getElementById('debugBox');
+        const t = new Date().toLocaleTimeString();
+        const line = document.createElement('div');
+        line.innerText = `[${t}] ${msg}`;
+        d.insertBefore(line, d.firstChild);
+        if(d.childNodes.length > 50) d.removeChild(d.lastChild);
+    }
+
+    window.onerror = function(msg, url, line) {
+        logDebug(`ERROR: ${msg} (Line: ${line})`);
+        Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'System Error', text: msg });
+    };
+
+    // --- AUTH & INIT ---
     onAuthStateChanged(auth, async u => {
         if (!u) window.location.href = "index.html";
         else {
-            const s = await get(ref(db, `users/${u.uid}`));
-            if(s.exists()) {
-                CURRENT_ROLE = s.val().role;
-                document.getElementById('userRoleBadge').innerText = CURRENT_ROLE.toUpperCase();
-                
-                // 1. Set Permissions First
-                if(CURRENT_ROLE === 'admin') {
-                    document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block'); // Explicitly show
+            logDebug(`Auth: Logged in as ${u.email}`);
+            try {
+                const s = await get(ref(db, `users/${u.uid}`));
+                if(s.exists()) {
+                    CURRENT_ROLE = s.val().role;
+                    document.getElementById('userRoleBadge').innerText = CURRENT_ROLE.toUpperCase();
+                    logDebug(`Role: ${CURRENT_ROLE}`);
+                    
+                    if(CURRENT_ROLE === 'admin') {
+                        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
+                    } else {
+                        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+                    }
+                    startDataSync();
                 } else {
-                    document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+                    logDebug("Auth Error: Role not found");
                 }
-
-                // 2. Start Data Stream ONLY after Role is confirmed
-                startDataSync();
-            }
+            } catch (e) { logDebug("DB Error: " + e.message); }
         }
     });
 
     function startDataSync() {
-        // Events Listener
         onValue(ref(db, 'events'), snap => {
             STATE.events = snap.val() || {};
+            logDebug(`Events Loaded: ${Object.keys(STATE.events).length}`);
             renderDashboard(); 
-            renderEventsList(); // Now CURRENT_ROLE is guaranteed to be set
+            renderEventsList();
         });
 
-        // Stats Listener
         onValue(ref(db, 'stats'), snap => {
             STATE.stats = snap.val() || {};
             document.getElementById('statRegCount').innerText = STATE.stats.total_registered || 0;
             document.getElementById('statTotalScans').innerText = STATE.stats.total_scans || 0;
             document.getElementById('statInside').innerText = STATE.stats.present_now || 0;
+            logDebug("Stats Refreshed");
             renderDashboard(); 
         });
 
-        // Staff Listener (Only for Admins)
         if(CURRENT_ROLE === 'admin') {
             onValue(ref(db, 'users'), s => {
                 const tb = document.getElementById('staffTableBody'); tb.innerHTML='';
                 if(s.exists()) Object.entries(s.val()).forEach(([uid, u]) => {
-                    const del = `<button class="btn btn-sm btn-danger ms-2" onclick="remS('${uid}')"><i class="bi bi-trash"></i></button>`;
-                    tb.innerHTML += `<tr><td>${u.email}</td><td><span class="badge bg-secondary">${u.role}</span></td><td><div class="input-group input-group-sm" style="max-width:150px"><input type="password" value="${u.password}" id="p-${uid}" class="form-control" readonly><button class="btn btn-outline-secondary" onclick="togP('${uid}')"><i class="bi bi-eye"></i></button></div></td><td>${del}</td></tr>`;
+                    const del = `<button class="btn btn-sm btn-light text-danger border" onclick="remS('${uid}')"><i class="bi bi-trash-fill"></i></button>`;
+                    tb.innerHTML += `<tr><td class="fw-bold">${u.email}</td><td><span class="badge bg-dark">${u.role}</span></td><td><div class="input-group input-group-sm" style="max-width:150px"><input type="password" value="${u.password}" id="p-${uid}" class="form-control border-0 bg-light" readonly><button class="btn btn-light border" onclick="togP('${uid}')"><i class="bi bi-eye-fill"></i></button></div></td><td>${del}</td></tr>`;
                 });
             });
         }
     }
 
-    // --- UI RENDERERS ---
+    // --- DASHBOARD RENDER (BEAUTIFIED) ---
     function renderDashboard() {
-        const container = document.getElementById('liveEventCards'); container.innerHTML = '';
+        const container = document.getElementById('liveEventCards');
+        container.innerHTML = '';
+        
         const eventKeys = Object.keys(STATE.events);
         document.getElementById('statEventsCount').innerText = eventKeys.length;
 
-        if (eventKeys.length === 0) { container.innerHTML = '<div class="col-12 text-center text-muted py-5">No Active Events</div>'; return; }
+        if (eventKeys.length === 0) {
+            container.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="bi bi-calendar-x fs-1"></i><p class="mt-2">No Active Events Found</p></div>';
+            return;
+        }
 
         const eventStats = STATE.stats.events || {};
+
         eventKeys.forEach(id => {
             const evt = STATE.events[id];
-            let stat = eventStats[id]; // ID Match
-            if (!stat) { const mKey = Object.keys(eventStats).find(k => k === evt.name || k.trim() === evt.name.trim()); if(mKey) stat = eventStats[mKey]; } // Name Match Fallback
+            
+            // HYBRID MATCHING
+            let stat = eventStats[id];
+            if (!stat) {
+                const matchingKey = Object.keys(eventStats).find(k => k === evt.name || k.trim() === evt.name.trim());
+                if(matchingKey) stat = eventStats[matchingKey];
+            }
             stat = stat || { in: 0, out: 0, completed: 0 };
             
-            let html = evt.type === 'ACCESS' ? 
-                `<div class="row text-center mt-3 g-0"><div class="col-4 border-end"><div class="live-val text-success">${stat.in||0}</div><small>IN</small></div><div class="col-4 border-end"><div class="live-val text-danger">${stat.out||0}</div><small>OUT</small></div><div class="col-4"><div class="live-val text-primary">${(stat.in||0)-(stat.out||0)}</div><small>NET</small></div></div>` : 
-                `<div class="text-center mt-3"><div class="live-val text-info" style="font-size:2.5rem;">${stat.completed||0}</div><small>COMPLETED</small></div>`;
+            let statsHtml = '';
+            let badgesHtml = '';
 
-            container.innerHTML += `<div class="col-md-4"><div class="stat-card border-top border-4 border-primary shadow-sm"><div class="d-flex justify-content-between"><h5 class="fw-bold mb-0 text-truncate">${evt.name}</h5><span class="badge bg-light text-dark border">${evt.type}</span></div>${html}</div></div>`;
+            // Generate Button Badges based on custom buttons
+            if (evt.buttons && Array.isArray(evt.buttons)) {
+                badgesHtml = `<div class="d-flex gap-2 mt-2 flex-wrap">`;
+                evt.buttons.forEach(btn => {
+                    let colorClass = 'primary';
+                    if(btn === 'IN') colorClass = 'success';
+                    if(btn === 'OUT') colorClass = 'danger';
+                    badgesHtml += `<span class="badge bg-${colorClass} bg-opacity-10 text-${colorClass} border border-${colorClass} border-opacity-25">${btn}</span>`;
+                });
+                badgesHtml += `</div>`;
+            }
+
+            if(evt.type === 'ACCESS') {
+                const inC = parseInt(stat.in) || 0;
+                const outC = parseInt(stat.out) || 0;
+                const netC = inC - outC;
+                
+                statsHtml = `
+                <div class="stat-grid mt-3">
+                    <div class="grid-item"><span class="stat-num text-success">${inC}</span><span class="stat-txt">Entered</span></div>
+                    <div class="grid-item"><span class="stat-num text-danger">${outC}</span><span class="stat-txt">Exited</span></div>
+                    <div class="grid-item"><span class="stat-num text-primary">${netC}</span><span class="stat-txt">Inside</span></div>
+                </div>`;
+            } else {
+                statsHtml = `
+                <div class="text-center mt-4 mb-2">
+                    <div class="live-val text-dark" style="font-size:3rem;">${stat.completed || 0}</div>
+                    <span class="text-muted fw-bold small text-uppercase">Total Scans Completed</span>
+                </div>`;
+            }
+
+            container.innerHTML += `
+            <div class="col-md-4">
+                <div class="stat-card event-card">
+                    <div class="event-card-header">
+                        <div>
+                            <div class="event-title">${evt.name}</div>
+                            <small class="text-muted">ID: ${id.substring(0,6)}...</small>
+                            ${badgesHtml}
+                        </div>
+                        <span class="event-type type-${evt.type}">${evt.type}</span>
+                    </div>
+                    ${statsHtml}
+                </div>
+            </div>`;
         });
     }
 
     function renderEventsList() {
-        const list = document.getElementById('eventsListContainer'); list.innerHTML = '';
+        const list = document.getElementById('eventsListContainer');
+        list.innerHTML = '';
         Object.entries(STATE.events).forEach(([id, evt]) => {
-            const delBtn = (CURRENT_ROLE === 'admin') ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteEvent('${id}')"><i class="bi bi-trash"></i></button>` : '';
-            list.innerHTML += `<div class="d-flex justify-content-between align-items-center bg-light p-3 rounded mb-2"><div><b>${evt.name}</b> <small class="text-muted">${evt.type}</small></div>${delBtn}</div>`;
+            const delBtn = (CURRENT_ROLE === 'admin') ? `<button class="btn btn-sm btn-light text-danger border" onclick="deleteEvent('${id}')"><i class="bi bi-trash-fill"></i></button>` : '';
+            list.innerHTML += `
+            <div class="d-flex justify-content-between align-items-center bg-white p-3 rounded-3 border mb-2 shadow-sm">
+                <div>
+                    <div class="fw-bold text-dark">${evt.name}</div>
+                    <span class="badge bg-light text-dark border">${evt.type}</span>
+                </div>
+                ${delBtn}
+            </div>`;
         });
     }
 
-    // --- ACTIONS ---
-    window.addNewEvent = async () => {
-        const name = document.getElementById('evtName').value.trim(); const type = document.getElementById('evtType').value;
-        if (!name) return Swal.fire('Error', 'Name required', 'error');
-        await push(ref(db, 'events'), { name, type, buttons: type==='ACCESS'?['IN','OUT']:['SCAN'], active: true, createdAt: Date.now() });
-        Swal.fire('Success', 'Created', 'success'); document.getElementById('evtName').value = '';
+    // --- DATA CENTER LOGIC ---
+    window.exportLogs = async () => {
+        Swal.fire({title:'Generating Report...', didOpen:()=>Swal.showLoading()});
+        try {
+            const snap = await get(ref(db, 'logs'));
+            if(!snap.exists()) { Swal.fire('No Data', 'Log is empty', 'info'); return; }
+            
+            let csv = "Timestamp,Scout Name,Event,Action\n";
+            Object.values(snap.val()).forEach(l => {
+                const date = l.timestamp ? new Date(l.timestamp).toLocaleString() : '-';
+                csv += `"${date}","${l.scoutName}","${l.eventName}","${l.action}"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Log_Report.csv`; a.click();
+            Swal.close();
+        } catch(e) { window.onerror(e.message, 'Export', 0); }
     };
 
-    window.deleteEvent = async (id) => { if(CURRENT_ROLE==='admin' && confirm('Delete?')) await remove(ref(db, `events/${id}`)); };
+    window.exportScoutsCSV = async () => {
+        const s = await get(ref(db, 'scouts'));
+        if(s.exists()){
+            let c="ID,Name\n"; Object.values(s.val()).forEach(v=>c+=`${v.id},${v.name}\n`);
+            const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([c])); a.download="Scouts_DB.csv"; a.click();
+        } else Swal.fire('Empty','No scouts found','info');
+    };
+
+    window.handleImport = (input) => {
+        if(!input.files[0]) return;
+        Papa.parse(input.files[0], {
+            header: true, skipEmptyLines: true,
+            complete: async (res) => {
+                const updates = {}; let count = 0;
+                res.data.forEach(row => {
+                    const id = row['ID'] || row['id']; 
+                    const name = row['Name'] || row['name'];
+                    if(id && name) {
+                        const safeKey = id.trim().replace(/[.#$/[\]]/g, '_');
+                        updates[`scouts/${safeKey}`] = {id:id.trim(), name:name.trim()};
+                        count++;
+                    }
+                });
+                if(count > 0) {
+                    updates['stats/total_registered'] = increment(count);
+                    await update(ref(db), updates);
+                    Swal.fire('Success', `Imported ${count} Scouts`, 'success');
+                    logDebug(`Imported ${count} records`);
+                } else Swal.fire('Error', 'Invalid CSV (Headers must be ID, Name)', 'error');
+                input.value = '';
+            }
+        });
+    };
+
+    // --- STANDARD ACTIONS ---
+    window.addNewEvent = async () => {
+        const name = document.getElementById('evtName').value.trim();
+        const type = document.getElementById('evtType').value;
+        const btnsStr = document.getElementById('evtBtns').value.trim();
+        
+        if (!name) return Swal.fire('Error', 'Name required', 'error');
+        
+        let buttons = [];
+        if (btnsStr) {
+            buttons = btnsStr.split(',').map(s => s.trim().toUpperCase());
+        } else {
+            buttons = type === 'ACCESS' ? ['IN', 'OUT'] : ['SCAN'];
+        }
+
+        await push(ref(db, 'events'), { name, type, buttons, active: true, createdAt: Date.now() });
+        Swal.fire({toast:true, position:'top-end', icon:'success', title:'Event Created', showConfirmButton:false, timer:1500});
+        document.getElementById('evtName').value = '';
+        document.getElementById('evtBtns').value = '';
+    };
+
+    window.deleteEvent = async (id) => { if(CURRENT_ROLE==='admin' && confirm('Delete Event?')) await remove(ref(db, `events/${id}`)); };
 
     window.addStaffMember = async () => {
         const e = document.getElementById('stfEmail').value; const p = document.getElementById('stfPass').value; const r = document.getElementById('stfRole').value;
@@ -218,7 +571,7 @@
             await signOut(secondaryAuth);
             Swal.fire('Success','User Created','success');
             document.getElementById('stfEmail').value=''; document.getElementById('stfPass').value='';
-        } catch(err) { Swal.fire('Error',err.message,'error'); }
+        } catch(err) { window.onerror(err.message, 'AddStaff', 0); }
     };
 
     window.processRegistration = async (print) => {
@@ -241,19 +594,20 @@
     // UTILS
     window.togP=(id)=>{const x=document.getElementById('p-'+id);x.type=x.type==='password'?'text':'password'};
     window.remS=async(uid)=>{if(CURRENT_ROLE==='admin'&&confirm('Delete?'))await remove(ref(db,`users/${uid}`))};
-    window.initiateSystemReset=async()=>{if(prompt("Master Key")==="200431504082"&&confirm("Sure?"))await update(ref(db),{scouts:null,logs:null,stats:null});};
-    window.performSearch=async()=>{const id=document.getElementById('searchInput').value.trim(); const s=await get(ref(db,`scouts/${id.replace(/[.#$/[\]]/g,'_')}`)); if(s.exists()){document.getElementById('resName').innerText=s.val().name;document.getElementById('resID').innerText=s.val().id;document.getElementById('searchResult').style.display='block';window.foundScout=s.val();}else Swal.fire('Not Found','','error');};
+    window.initiateSystemReset=async()=>{if(prompt("Master Key")==="200431504082"&&confirm("Factory Reset: Are you sure?"))await update(ref(db),{scouts:null,logs:null,stats:null});};
+    window.performSearch=async()=>{const id=document.getElementById('searchInput').value.trim(); if(!id)return; const s=await get(ref(db,`scouts/${id.replace(/[.#$/[\]]/g,'_')}`)); if(s.exists()){document.getElementById('resName').innerText=s.val().name;document.getElementById('resID').innerText=s.val().id;document.getElementById('searchResult').style.display='block';window.foundScout=s.val();}else Swal.fire('Not Found','','error');};
     window.downloadSingleID=()=>{if(window.foundScout)generatePDF([window.foundScout])};
     window.toggleScannerLock=(el)=>set(ref(db,'system/scannerLock'),el.checked);
-    window.exportScoutsCSV=async()=>{const s=await get(ref(db,'scouts'));if(s.exists()){let c="ID,Name\n";Object.values(s.val()).forEach(v=>c+=`${v.id},${v.name}\n`);const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c]));a.download="Scouts.csv";a.click();}};
-    window.importCSVFile=(i)=>{Papa.parse(i.files[0],{complete:(r)=>{let t="";r.data.forEach(d=>{if(d.length>=2)t+=`${d[0]},${d[1]}\n`});document.getElementById('bulkText').value=t;}})};
-    window.showSection=(id,el)=>{document.querySelectorAll('.section').forEach(s=>s.style.display='none');document.getElementById('sec-'+id).style.display='block';document.querySelectorAll('.nav-link').forEach(n=>n.classList.remove('active'));el.classList.add('active');};
+    
+    window.showSection=(id,el)=>{document.querySelectorAll('.section').forEach(s=>s.style.display='none');document.getElementById('sec-'+id).style.display='block';document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active');};
     window.logout=()=>signOut(auth).then(()=>window.location.href="index.html");
 
+    // ATTACH GLOBALS
     window.addNewEvent = addNewEvent; window.deleteEvent = deleteEvent; window.processRegistration = processRegistration;
     window.addStaffMember = addStaffMember; window.performSearch = performSearch; window.downloadSingleID = downloadSingleID;
     window.toggleScannerLock = toggleScannerLock; window.initiateSystemReset = initiateSystemReset;
-    window.exportScoutsCSV = exportScoutsCSV; window.importCSVFile = importCSVFile; window.togP = togP; window.remS = remS;
+    window.exportScoutsCSV = exportScoutsCSV; window.exportLogs = exportLogs; window.handleImport = handleImport;
+    window.togP = togP; window.remS = remS;
 </script>
 </body>
 </html>
