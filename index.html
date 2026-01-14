@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoutPass | Login</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-light: #F0F5F4;
+            --text-dark: #181818;
+            --primary-blue: #5285E8;
+            --accent-lime: #B8FB4C;
+            --white: #ffffff;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            font-family: 'Outfit', sans-serif;
+            
+            /* ✅ Fix: Use min-height instead of fixed height */
+            min-height: 100vh; 
+            
+            /* ✅ Fix: Flex Layout for perfect centering */
+            display: flex;
+            flex-direction: column;
+            
+            /* No overflow hidden to allow scrolling on small screens */
+            margin: 0;
+            position: relative;
+        }
+
+        /* Subtle Background Blobs */
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px); /* Increased blur for smoother look */
+            opacity: 0.6;
+            z-index: -1;
+            animation: float 10s infinite ease-in-out;
+        }
+        .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; max-width: 400px; max-height: 400px; background: rgba(82, 133, 232, 0.15); }
+        .blob-2 { bottom: -10%; right: -10%; width: 50vw; height: 50vw; max-width: 300px; max-height: 300px; background: rgba(184, 251, 76, 0.2); }
+
+        @keyframes float {
+            0% { transform: translate(0, 0); }
+            50% { transform: translate(20px, 30px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        .login-card {
+            background: var(--white);
+            padding: 45px 40px;
+            border-radius: 24px;
+            width: 90%; /* Responsive width */
+            max-width: 420px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            text-align: center;
+            
+            /* ✅ KEY FIX: This centers the card perfectly in available space */
+            margin: auto; 
+        }
+
+        .brand-logo {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+            letter-spacing: -0.5px;
+        }
+        .brand-accent { color: var(--primary-blue); }
+
+        .form-control {
+            background: #F8F9FA;
+            border: 2px solid #E9ECEF;
+            color: var(--text-dark);
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            transition: 0.3s;
+        }
+        .form-control:focus {
+            background: var(--white);
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 4px rgba(82, 133, 232, 0.1);
+            outline: none;
+        }
+
+        .btn-primary-custom {
+            background: var(--primary-blue);
+            color: var(--white);
+            font-weight: 600;
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            margin-top: 10px;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(82, 133, 232, 0.3);
+        }
+        .btn-primary-custom:hover {
+            background: #3e70d4;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(82, 133, 232, 0.4);
+        }
+
+        .footer-text {
+            /* ✅ Fix: Footer sits at bottom naturally */
+            padding: 20px;
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: 500;
+            text-align: center;
+            width: 100%;
+        }
+        .footer-text strong { color: var(--primary-blue); }
+
+        .password-field { position: relative; }
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #adb5bd;
+            font-size: 1.1rem;
+            z-index: 10; /* Ensure it's clickable */
+        }
+        .toggle-password:hover { color: var(--primary-blue); }
+
+        #setupLink {
+            font-size: 0.85rem;
+            color: #adb5bd;
+            text-decoration: none;
+            cursor: pointer;
+            display: none;
+            margin-top: 15px;
+            transition: 0.3s;
+        }
+        #setupLink:hover { color: var(--text-dark); }
+        
+        .scout-icon {
+            width: 60px; height: 60px;
+            background: rgba(184, 251, 76, 0.3);
+            color: #4a7c04;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px;
+            margin: 0 auto 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <div class="login-card animate__animated animate__fadeInUp">
+        <div class="scout-icon"><i class="bi bi-shield-lock-fill"></i></div>
+        <h2 class="brand-logo">Scout<span class="brand-accent">Pass</span></h2>
+        <p class="text-muted small mb-4">Camp Management System</p>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="mb-3 text-start">
+                <input type="email" id="email" class="form-control" placeholder="name@example.com" required>
+            </div>
+            <div class="mb-4 text-start password-field">
+                <input type="password" id="password" class="form-control" placeholder="Enter Password" required>
+                <i class="bi bi-eye-slash-fill toggle-password" id="togglePass" onclick="togglePassword()"></i>
+            </div>
+            
+            <button type="submit" id="loginBtn" class="btn btn-primary-custom">Sign In</button>
+            
+            <div class="text-center">
+                <span id="setupLink" onclick="startInitialSetup()"><i class="bi bi-magic"></i> Setup Admin</span>
+            </div>
+        </form>
+    </div>
+
+    <div class="footer-text">
+        Designed & Developed by <strong>Madhawa Basnayake</strong>
+    </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    // ✅ UPDATED CONFIGURATION (Based on your new input)
+    const firebaseConfig = {
+        apiKey: "AIzaSyBZzwTD7gSTmsQhSvQYARZP_bUfKXW4Myg",
+        authDomain: "scoutpak-6fed9.firebaseapp.com",
+        databaseURL: "https://scoutpak-6fed9-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "scoutpak-6fed9",
+        storageBucket: "scoutpak-6fed9.firebasestorage.app",
+        messagingSenderId: "294082875833",
+        appId: "1:294082875833:web:3460d6dd3d501139ba6668"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    // --- SYSTEM LOGIC ---
+
+    async function checkSystemStatus() {
+        const setupRef = ref(db, 'system/isSetupDone');
+        const snapshot = await get(setupRef);
+        if (!snapshot.exists() || snapshot.val() === false) {
+            document.getElementById('setupLink').style.display = 'inline-block';
+        }
+    }
+    checkSystemStatus();
+
+    window.togglePassword = function() {
+        const passInput = document.getElementById('password');
+        const icon = document.getElementById('togglePass');
+        if (passInput.type === "password") {
+            passInput.type = "text";
+            icon.className = 'bi bi-eye-fill toggle-password text-primary';
+        } else {
+            passInput.type = "password";
+            icon.className = 'bi bi-eye-slash-fill toggle-password';
+        }
+    }
+
+    window.startInitialSetup = async function() {
+        // Light Theme Popup
+        const { value: code } = await Swal.fire({
+            title: 'Admin Setup',
+            text: 'Enter Master Key',
+            input: 'password',
+            confirmButtonColor: '#181818',
+            confirmButtonText: 'Verify'
+        });
+
+        if (code === "200431504082") {
+            const { value: formValues } = await Swal.fire({
+                title: 'Create Root Admin',
+                html: '<input id="swal-email" class="swal2-input" placeholder="Email"><input id="swal-password" class="swal2-input" type="password" placeholder="Password">',
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonColor: '#5285E8',
+                preConfirm: () => [document.getElementById('swal-email').value, document.getElementById('swal-password').value]
+            });
+
+            if (formValues) {
+                const [email, pass] = formValues;
+                if(!email || !pass) return;
+                
+                Swal.fire({title: 'Creating...', didOpen: () => Swal.showLoading()});
+                
+                try {
+                    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+                    await set(ref(db, `users/${cred.user.uid}`), { email, role: 'admin' });
+                    await set(ref(db, 'system/isSetupDone'), true);
+                    
+                    Swal.fire('Success', 'Root Admin Created!', 'success');
+                    document.getElementById('setupLink').style.display = 'none';
+                } catch (e) {
+                    Swal.fire('Error', e.message, 'error');
+                }
+            }
+        } else if (code) {
+            Swal.fire('Error', 'Invalid Key', 'error');
+        }
+    }
+
+    window.handleLogin = async function(e) {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('password').value;
+        const btn = document.getElementById('loginBtn');
+        const originalText = btn.innerHTML;
+
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Signing In...';
+        btn.disabled = true;
+
+        try {
+            const userCred = await signInWithEmailAndPassword(auth, email, pass);
+            const user = userCred.user;
+            const snapshot = await get(ref(db, `users/${user.uid}`));
+
+            if(snapshot.exists()) {
+                const role = snapshot.val().role;
+                // Success Toast
+                const Toast = Swal.mixin({toast: true, position: 'top', showConfirmButton: false, timer: 1500});
+                Toast.fire({icon: 'success', title: 'Login Successful'});
+
+                setTimeout(() => {
+                    window.location.href = role === 'scanner' ? "scanner.html" : "admin.html";
+                }, 1000);
+            } else {
+                throw new Error("User role not found.");
+            }
+        } catch (error) {
+            Swal.fire({icon: 'error', title: 'Login Failed', text: 'Invalid credentials or connection error.'});
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ScoutPass | Pro Scanner</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root {
+            --bg-color: #F0F5F4;
+            --primary: #5285E8;
+            --accent: #B8FB4C;
+            --dark: #181818;
+            --white: #ffffff;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Poppins', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden; /* No Scroll */
+        }
+
+        /* HEADER */
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+        .header h3 {
+            font-weight: 800;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        /* CAMERA VIEW - CLEAN LOOK */
+        .camera-wrapper {
+            width: 100%;
+            max-width: 400px;
+            aspect-ratio: 4/3;
+            background: black;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border: 4px solid var(--white);
+            margin-bottom: 15px;
+        }
+        #reader { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* CONTROLS ROW */
+        .controls-row {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 15px;
+        }
+        
+        .btn-flash {
+            background: var(--dark);
+            color: white;
+            border: none;
+            width: 50px;
+            border-radius: 12px;
+            font-size: 1.2rem;
+        }
+        .btn-flash.active { background: var(--accent); color: var(--dark); }
+
+        .camera-select {
+            flex-grow: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            background: var(--white);
+            font-weight: 600;
+            color: var(--dark);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        /* INPUTS AREA */
+        .input-group-custom {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .form-control-lg {
+            border: none;
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 1rem;
+            font-weight: 500;
+            background: var(--white);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .form-control-lg:focus { box-shadow: 0 0 0 3px rgba(82, 133, 232, 0.3); }
+
+        /* MAIN BUTTON */
+        .btn-main {
+            background: var(--primary);
+            color: white;
+            font-weight: 700;
+            padding: 15px;
+            border-radius: 50px;
+            border: none;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            box-shadow: 0 8px 20px rgba(82, 133, 232, 0.4);
+            margin-top: 10px;
+            transition: 0.2s;
+        }
+        .btn-main:active { transform: scale(0.98); }
+
+        /* FOOTER */
+        .footer {
+            margin-top: auto;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #888;
+        }
+        .logout-link {
+            color: #ff4d4d;
+            font-weight: 700;
+            text-decoration: none;
+            margin-top: 10px;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        /* MODAL (Popup) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            display: none;
+            align-items: center; justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        .modal-box {
+            background: var(--white);
+            width: 85%; max-width: 350px;
+            padding: 30px 20px;
+            border-radius: 25px;
+            text-align: center;
+            animation: popIn 0.2s ease-out;
+        }
+        @keyframes popIn { from{transform:scale(0.8);opacity:0} to{transform:scale(1);opacity:1} }
+        
+        .scout-img {
+            width: 90px; height: 90px;
+            background: #eef2ff; color: var(--primary);
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 40px; border: 4px solid var(--white);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .act-btn { padding: 15px; border-radius: 12px; border: none; font-weight: 700; font-size: 1rem; color: white; }
+        .act-in { background: #10b981; }
+        .act-out { background: #ef4444; }
+        .act-done { background: var(--primary); grid-column: span 2; }
+        .act-cancel { background: #f3f4f6; color: #4b5563; grid-column: span 2; margin-top: 5px; }
+
+        /* Lock Screen */
+        #lockScreen { display: none; position: fixed; inset: 0; background: #ef4444; z-index: 2000; color: white; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div id="lockScreen"><i class="bi bi-lock-fill" style="font-size:4rem;margin-bottom:10px"></i><h2 class="fw-bold">SYSTEM LOCKED</h2></div>
+
+    <div class="header">
+        <h3>ScoutPass Scanner</h3>
+        <small class="text-muted" id="userEmailDisplay">Loading...</small>
+    </div>
+
+    <div class="camera-wrapper">
+        <div id="reader"></div>
+    </div>
+
+    <div class="controls-row">
+        <button class="btn-flash" id="btnFlash" onclick="toggleFlash()"><i class="bi bi-lightning-fill"></i></button>
+        <select class="camera-select" id="camList" onchange="startSelectedCamera()">
+            <option value="" disabled selected>Loading Cameras...</option>
+        </select>
+    </div>
+
+    <div class="input-group-custom">
+        <select id="eventSelect" class="form-control-lg" onchange="setEvent()">
+            <option value="" disabled selected>Select Event</option>
+        </select>
+        
+        <input type="text" id="manualInput" class="form-control-lg" placeholder="Enter ID Manually">
+        
+        <button class="btn-main" onclick="manualSubmit()">
+            <i class="bi bi-qr-code-scan me-2"></i> SCAN / SUBMIT
+        </button>
+    </div>
+
+    <div class="footer">
+        <div class="logout-link" onclick="logout()">Logout</div>
+        <div class="mt-2">Designed & Developed by <strong>Madhawa Basnayake</strong></div>
+    </div>
+
+    <div class="modal-overlay" id="scanModal">
+        <div class="modal-box">
+            <div class="scout-img"><i class="bi bi-person-fill"></i></div>
+            <h4 class="fw-bold mb-0" id="mName">...</h4>
+            <span class="badge bg-dark mb-3" id="mID">...</span>
+            <p class="text-muted small fw-bold text-uppercase" id="mEvent">...</p>
+            
+            <div id="mButtons" class="action-grid"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, onValue, get, update, push, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyBZzwTD7gSTmsQhSvQYARZP_bUfKXW4Myg",
+            authDomain: "scoutpak-6fed9.firebaseapp.com",
+            databaseURL: "https://scoutpak-6fed9-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "scoutpak-6fed9",
+            storageBucket: "scoutpak-6fed9.firebasestorage.app",
+            messagingSenderId: "294082875833",
+            appId: "1:294082875833:web:3460d6dd3d501139ba6668"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        let html5QrCode;
+        let currentEvent = null;
+        let isProcessing = false;
+        let lastCode = null;
+        let lastTime = 0;
+        let isFlash = false;
+
+        // 1. AUTH & SETUP
+        onAuthStateChanged(auth, (user) => {
+            if (!user) window.location.href = "index.html";
+            else {
+                document.getElementById('userEmailDisplay').innerText = user.email;
+                initCameraSystem();
+            }
+        });
+
+        // 2. CAMERA SYSTEM (Manual Select)
+        async function initCameraSystem() {
+            try {
+                const cameras = await Html5Qrcode.getCameras();
+                const sel = document.getElementById('camList');
+                sel.innerHTML = "";
+                
+                if (cameras && cameras.length) {
+                    cameras.forEach(cam => {
+                        const opt = document.createElement('option');
+                        opt.value = cam.id;
+                        opt.text = cam.label || `Camera ${sel.length + 1}`;
+                        sel.appendChild(opt);
+                    });
+                    // Start last camera (usually back)
+                    startCamera(cameras[cameras.length - 1].id);
+                } else {
+                    sel.innerHTML = "<option>No Cameras</option>";
+                }
+            } catch (e) {
+                console.error(e);
+                Swal.fire('Error', 'Camera Access Denied', 'error');
+            }
+        }
+
+        function startCamera(camId) {
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => runScanner(camId));
+            } else {
+                html5QrCode = new Html5Qrcode("reader");
+                runScanner(camId);
+            }
+        }
+
+        function runScanner(camId) {
+            html5QrCode.start(
+                camId, 
+                { fps: 20, qrbox: { width: 250, height: 250 }, aspectRatio: 1.33 },
+                onScanSuccess,
+                (err) => {} // Ignore frame errors
+            ).catch(err => console.log(err));
+        }
+
+        window.startSelectedCamera = () => {
+            const id = document.getElementById('camList').value;
+            startCamera(id);
+        };
+
+        // 3. SCAN LOGIC (The 3-Second Rule)
+        async function onScanSuccess(decodedText) {
+            const now = Date.now();
+            
+            // IGNORE duplicates within 3 seconds
+            if (decodedText === lastCode && (now - lastTime < 3000)) {
+                return;
+            }
+
+            if (!currentEvent) {
+                // Only alert once per 3 secs to avoid spamming
+                if (now - lastTime > 3000) {
+                    lastTime = now; 
+                    Swal.fire({toast:true, position:'top', icon:'warning', title:'Select an Event!'});
+                }
+                return;
+            }
+
+            // Valid New Code
+            lastCode = decodedText;
+            lastTime = now;
+            
+            processScout(decodedText);
+        }
+
+        // 4. DATA PROCESSING
+        async function processScout(idRaw) {
+            if (isProcessing) return;
+            isProcessing = true;
+            
+            // Feedback
+            if(html5QrCode) html5QrCode.pause();
+            if(navigator.vibrate) navigator.vibrate(100);
+
+            try {
+                const safeKey = idRaw.replace(/[.#$/[\]]/g, '_');
+                const snap = await get(ref(db, `scouts/${safeKey}`));
+
+                if (snap.exists()) {
+                    showModal(snap.val());
+                } else {
+                    Swal.fire({icon:'error', title:'Unknown ID', timer:1000, showConfirmButton:false})
+                    .then(() => resume());
+                }
+            } catch (e) {
+                console.error(e);
+                resume();
+            }
+        }
+
+        function showModal(scout) {
+            document.getElementById('mName').innerText = scout.name;
+            document.getElementById('mID').innerText = scout.id;
+            document.getElementById('mEvent').innerText = currentEvent.name;
+
+            const box = document.getElementById('mButtons');
+            box.innerHTML = '';
+
+            // Buttons
+            currentEvent.buttons.forEach(btn => {
+                const b = document.createElement('button');
+                b.className = 'act-btn';
+                b.innerText = btn;
+                if(btn==='IN') b.classList.add('act-in');
+                else if(btn==='OUT') b.classList.add('act-out');
+                else b.classList.add('act-done');
+                
+                b.onclick = () => submit(scout, btn);
+                box.appendChild(b);
+            });
+
+            // Cancel
+            const c = document.createElement('button');
+            c.className = 'act-btn act-cancel';
+            c.innerText = 'Cancel';
+            c.onclick = closeModal;
+            box.appendChild(c);
+
+            document.getElementById('scanModal').style.display = 'flex';
+        }
+
+        // 5. SUBMIT TO DB
+        async function submit(scout, action) {
+            closeModal(); // Instant UI close
+            
+            const updates = {};
+            const key = push(ref(db, 'logs')).key;
+            
+            // Log
+            updates[`logs/${key}`] = {
+                scoutID: scout.id,
+                scoutName: scout.name,
+                eventName: currentEvent.name,
+                action: action,
+                timestamp: serverTimestamp(),
+                scannedBy: auth.currentUser.email
+            };
+
+            // Stats
+            updates['stats/total_scans'] = increment(1);
+            if(action === 'IN') {
+                updates['stats/present_now'] = increment(1);
+                updates[`stats/events/${currentEvent.name}/in`] = increment(1);
+            } else if(action === 'OUT') {
+                updates['stats/present_now'] = increment(-1);
+                updates[`stats/events/${currentEvent.name}/out`] = increment(1);
+            } else {
+                updates[`stats/events/${currentEvent.name}/completed`] = increment(1);
+            }
+
+            try {
+                await update(ref(db), updates);
+                const Toast = Swal.mixin({toast: true, position: 'bottom', showConfirmButton: false, timer: 1500});
+                Toast.fire({icon: 'success', title: 'Recorded'});
+            } catch(e) { console.error(e); }
+            
+            resume();
+        }
+
+        // 6. UTILS
+        function closeModal() {
+            document.getElementById('scanModal').style.display = 'none';
+            resume();
+        }
+
+        function resume() {
+            isProcessing = false;
+            if(html5QrCode) html5QrCode.resume();
+        }
+
+        // LOAD EVENTS
+        onValue(ref(db, 'events'), (s) => {
+            const el = document.getElementById('eventSelect');
+            el.innerHTML = '<option value="" disabled selected>Select Event</option>';
+            if(s.exists()) {
+                Object.values(s.val()).forEach(evt => {
+                    if(evt.active) {
+                        const opt = document.createElement('option');
+                        opt.value = JSON.stringify(evt);
+                        opt.text = evt.name;
+                        el.appendChild(opt);
+                    }
+                });
+            }
+        });
+
+        window.setEvent = () => {
+            const v = document.getElementById('eventSelect').value;
+            if(v) currentEvent = JSON.parse(v);
+        };
+
+        window.manualSubmit = () => {
+            const v = document.getElementById('manualInput').value.trim();
+            if(v) processScout(v);
+        };
+
+        window.toggleFlash = () => {
+            isFlash = !isFlash;
+            html5QrCode.applyVideoConstraints({ advanced: [{ torch: isFlash }] });
+            document.getElementById('btnFlash').classList.toggle('active');
+        };
+
+        // LOCK LISTENER
+        onValue(ref(db, 'system/scannerLock'), (s) => {
+            const l = document.getElementById('lockScreen');
+            if(s.val()) { l.style.display = 'flex'; if(html5QrCode) html5QrCode.pause(); }
+            else { l.style.display = 'none'; if(html5QrCode) html5QrCode.resume(); }
+        });
+
+        window.logout = () => signOut(auth).then(()=> window.location.href="index.html");
+    </script>
+</body>
+</html>
