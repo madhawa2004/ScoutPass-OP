@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ScoutPass | Pro Scanner</title>
+    <title>ScoutPass Scanner V11.5</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -29,7 +29,7 @@
             flex-direction: column;
             align-items: center;
             padding: 20px;
-            overflow: hidden; /* No Scroll */
+            overflow: hidden;
         }
 
         /* HEADER */
@@ -47,21 +47,68 @@
             font-size: 1.5rem;
         }
 
-        /* CAMERA VIEW - CLEAN LOOK */
+        /* --- CAMERA STYLING (UPDATED) --- */
         .camera-wrapper {
             width: 100%;
             max-width: 400px;
-            aspect-ratio: 4/3;
-            background: black;
+            /* Remove fixed aspect ratio to let it fill naturally, or keep square */
+            aspect-ratio: 1/1; 
+            background: #000;
             border-radius: 20px;
             overflow: hidden;
             position: relative;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            border: 4px solid var(--white);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            border: 0; /* Removed thick white border for cleaner look */
             margin-bottom: 15px;
         }
-        #reader { width: 100%; height: 100%; object-fit: cover; }
         
+        #reader { 
+            width: 100%; 
+            height: 100%; 
+        }
+        
+        /* Force video to fill entire container (No Black Bars) */
+        #reader video {
+            object-fit: cover !important;
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: 20px;
+        }
+
+        /* CLEAN OVERLAY (No Dimming) */
+        .scan-overlay {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 220px; height: 220px;
+            
+            /* No background darkening - Just the frame */
+            box-shadow: none; 
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Corner Animations */
+        .scan-overlay::before, .scan-overlay::after {
+            content: ''; position: absolute;
+            width: 40px; height: 40px;
+            border: 4px solid var(--accent);
+            animation: pulse-corners 2s infinite;
+        }
+        .scan-overlay::before { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+        .scan-overlay::after { bottom: 0; right: 0; border-left: 0; border-top: 0; }
+        
+        /* Additional Corners */
+        .corner-tr { position: absolute; top: 0; right: 0; width: 40px; height: 40px; border-top: 4px solid var(--accent); border-right: 4px solid var(--accent); }
+        .corner-bl { position: absolute; bottom: 0; left: 0; width: 40px; height: 40px; border-bottom: 4px solid var(--accent); border-left: 4px solid var(--accent); }
+
+        @keyframes pulse-corners { 
+            0% { transform: scale(1); opacity: 1; } 
+            50% { transform: scale(1.1); opacity: 0.8; } 
+            100% { transform: scale(1); opacity: 1; } 
+        }
+        /* -------------------------------- */
+
         /* CONTROLS ROW */
         .controls-row {
             display: flex;
@@ -195,6 +242,10 @@
 
     <div class="camera-wrapper">
         <div id="reader"></div>
+        <div class="scan-overlay">
+            <div class="corner-tr"></div>
+            <div class="corner-bl"></div>
+        </div>
     </div>
 
     <div class="controls-row">
@@ -268,7 +319,7 @@
             }
         });
 
-        // 2. CAMERA SYSTEM (Manual Select)
+        // 2. CAMERA SYSTEM
         async function initCameraSystem() {
             try {
                 const cameras = await Html5Qrcode.getCameras();
@@ -282,7 +333,6 @@
                         opt.text = cam.label || `Camera ${sel.length + 1}`;
                         sel.appendChild(opt);
                     });
-                    // Start last camera (usually back)
                     startCamera(cameras[cameras.length - 1].id);
                 } else {
                     sel.innerHTML = "<option>No Cameras</option>";
@@ -305,9 +355,9 @@
         function runScanner(camId) {
             html5QrCode.start(
                 camId, 
-                { fps: 20, qrbox: { width: 250, height: 250 }, aspectRatio: 1.33 },
+                { fps: 20, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 },
                 onScanSuccess,
-                (err) => {} // Ignore frame errors
+                (err) => {}
             ).catch(err => console.log(err));
         }
 
@@ -316,17 +366,12 @@
             startCamera(id);
         };
 
-        // 3. SCAN LOGIC (The 3-Second Rule)
+        // 3. SCAN LOGIC
         async function onScanSuccess(decodedText) {
             const now = Date.now();
-            
-            // IGNORE duplicates within 3 seconds
-            if (decodedText === lastCode && (now - lastTime < 3000)) {
-                return;
-            }
+            if (decodedText === lastCode && (now - lastTime < 3000)) return;
 
             if (!currentEvent) {
-                // Only alert once per 3 secs to avoid spamming
                 if (now - lastTime > 3000) {
                     lastTime = now; 
                     Swal.fire({toast:true, position:'top', icon:'warning', title:'Select an Event!'});
@@ -334,7 +379,6 @@
                 return;
             }
 
-            // Valid New Code
             lastCode = decodedText;
             lastTime = now;
             
@@ -346,7 +390,6 @@
             if (isProcessing) return;
             isProcessing = true;
             
-            // Feedback
             if(html5QrCode) html5QrCode.pause();
             if(navigator.vibrate) navigator.vibrate(100);
 
@@ -374,7 +417,6 @@
             const box = document.getElementById('mButtons');
             box.innerHTML = '';
 
-            // Buttons
             currentEvent.buttons.forEach(btn => {
                 const b = document.createElement('button');
                 b.className = 'act-btn';
@@ -387,7 +429,6 @@
                 box.appendChild(b);
             });
 
-            // Cancel
             const c = document.createElement('button');
             c.className = 'act-btn act-cancel';
             c.innerText = 'Cancel';
@@ -399,12 +440,11 @@
 
         // 5. SUBMIT TO DB
         async function submit(scout, action) {
-            closeModal(); // Instant UI close
+            closeModal();
             
             const updates = {};
             const key = push(ref(db, 'logs')).key;
             
-            // Log
             updates[`logs/${key}`] = {
                 scoutID: scout.id,
                 scoutName: scout.name,
@@ -414,7 +454,6 @@
                 scannedBy: auth.currentUser.email
             };
 
-            // Stats
             updates['stats/total_scans'] = increment(1);
             if(action === 'IN') {
                 updates['stats/present_now'] = increment(1);
@@ -435,7 +474,6 @@
             resume();
         }
 
-        // 6. UTILS
         function closeModal() {
             document.getElementById('scanModal').style.display = 'none';
             resume();
@@ -478,7 +516,6 @@
             document.getElementById('btnFlash').classList.toggle('active');
         };
 
-        // LOCK LISTENER
         onValue(ref(db, 'system/scannerLock'), (s) => {
             const l = document.getElementById('lockScreen');
             if(s.val()) { l.style.display = 'flex'; if(html5QrCode) html5QrCode.pause(); }
