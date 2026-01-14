@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScoutPass | Command Hub</title>
+    <title>ScoutPass | Command Hub V15.1</title>
     
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#5285E8">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -16,31 +20,22 @@
     <style>
         :root { --bg-light: #F0F5F4; --text-dark: #181818; --primary-blue: #5285E8; --accent-lime: #B8FB4C; --white: #ffffff; --sidebar-width: 260px; }
         body { background-color: var(--bg-light); color: var(--text-dark); font-family: 'Outfit', sans-serif; overflow-x: hidden; }
-        
         .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: var(--sidebar-width); background: var(--white); border-right: 1px solid rgba(0,0,0,0.05); padding: 25px; z-index: 1000; }
         .brand-logo { font-size: 1.6rem; font-weight: 700; color: var(--text-dark); margin-bottom: 40px; }
         .nav-link { color: #6c757d; font-weight: 500; padding: 12px 15px; border-radius: 12px; margin-bottom: 8px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s; }
         .nav-link:hover, .nav-link.active { background: rgba(82, 133, 232, 0.1); color: var(--primary-blue); font-weight: 600; }
-
         .main-content { margin-left: var(--sidebar-width); padding: 30px; }
-        .stat-card { background: var(--white); border-radius: 20px; padding: 25px; border: 1px solid rgba(0,0,0,0.02); box-shadow: 0 4px 20px rgba(0,0,0,0.03); height: 100%; }
+        .stat-card { background: var(--white); border-radius: 20px; padding: 25px; border: 1px solid rgba(0,0,0,0.02); box-shadow: 0 4px 20px rgba(0,0,0,0.03); height: 100%; transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); }
         .card-number { font-size: 2.5rem; font-weight: 700; color: var(--text-dark); margin-bottom: 0; }
-        
         .btn-lime { background: var(--accent-lime); color: var(--text-dark); border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; transition: 0.3s; }
         .btn-blue { background: var(--primary-blue); color: var(--white); border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; transition: 0.3s; }
         .btn-danger-custom { background: #ff4d4d; color: white; border:none; padding: 10px 20px; border-radius: 12px; font-weight: 600; }
-
+        .live-stat-box { font-size: 0.7rem; font-weight: 700; color: #adb5bd; letter-spacing: 1px; margin-top: 5px; }
+        .live-stat-val { font-size: 1.8rem; font-weight: 800; line-height: 1; transition: color 0.3s; }
+        .admin-only { display: block; }
         #qr-hidden { display: none; }
         .search-result-card { text-align: center; display: none; background: #f8f9fa; border-radius: 15px; padding: 20px; margin-top: 20px; border: 2px dashed #dee2e6; }
-        
-        .live-stat-box { font-size: 0.8rem; font-weight: 600; color: #666; text-transform: uppercase; }
-        .live-stat-val { font-size: 1.2rem; font-weight: 800; }
-
-        /* MODERATOR HIDING CLASS */
-        .admin-only { display: block; } 
-        
-        /* Staff Table Styles */
-        .table-custom td { vertical-align: middle; }
     </style>
 </head>
 <body>
@@ -54,10 +49,8 @@
         <div class="nav-link" onclick="showSection('search', this)"><i class="bi bi-search"></i> Scout Search</div>
         <div class="nav-link" onclick="showSection('registration', this)"><i class="bi bi-person-vcard-fill"></i> Registration</div>
         <div class="nav-link" onclick="showSection('events', this)"><i class="bi bi-calendar-check-fill"></i> Events</div>
-        
         <div class="nav-link admin-only" onclick="showSection('staff', this)"><i class="bi bi-people-fill"></i> Staff Manager</div>
         <div class="nav-link admin-only" onclick="showSection('settings', this)"><i class="bi bi-sliders"></i> Settings</div>
-        
         <div class="mt-auto pt-4 border-top">
             <div class="nav-link text-danger" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Logout</div>
         </div>
@@ -66,11 +59,7 @@
 
 <div class="main-content">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h3 class="fw-bold mb-0" id="pageTitle">War Room</h3>
-            <small class="text-muted">Role: <span id="userRoleBadge" class="badge bg-secondary">...</span></small>
-        </div>
-        <div id="liveClock" class="fw-bold text-primary"></div>
+        <div><h3 class="fw-bold mb-0" id="pageTitle">War Room</h3><small class="text-muted">Role: <span id="userRoleBadge" class="badge bg-secondary">...</span></small></div>
     </div>
 
     <div id="sec-dashboard" class="section animate__animated animate__fadeIn">
@@ -81,7 +70,7 @@
             <div class="col-md-3"><div class="stat-card"><h6>Events</h6><h1 class="card-number text-primary" id="statEventsCount">0</h1></div></div>
         </div>
         <h5 class="fw-bold text-muted mb-3">Live Activity Feed</h5>
-        <div class="row g-3" id="liveEventCards"><div class="col-12 text-center text-muted py-5">Waiting for data...</div></div>
+        <div class="row g-3" id="liveEventCards"><div class="col-12 text-center text-muted py-5">Connecting to live feed...</div></div>
     </div>
 
     <div id="sec-search" class="section animate__animated animate__fadeIn" style="display:none;">
@@ -176,16 +165,7 @@
     import { getDatabase, ref, onValue, set, get, update, push, remove, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     // CONFIG
-    const firebaseConfig = {
-        apiKey: "AIzaSyBZzwTD7gSTmsQhSvQYARZP_bUfKXW4Myg",
-        authDomain: "scoutpak-6fed9.firebaseapp.com",
-        databaseURL: "https://scoutpak-6fed9-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "scoutpak-6fed9",
-        storageBucket: "scoutpak-6fed9.firebasestorage.app",
-        messagingSenderId: "294082875833",
-        appId: "1:294082875833:web:3460d6dd3d501139ba6668"
-    };
-
+    const firebaseConfig = { apiKey: "AIzaSyBZzwTD7gSTmsQhSvQYARZP_bUfKXW4Myg", authDomain: "scoutpak-6fed9.firebaseapp.com", databaseURL: "https://scoutpak-6fed9-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "scoutpak-6fed9", storageBucket: "scoutpak-6fed9.firebasestorage.app", messagingSenderId: "294082875833", appId: "1:294082875833:web:3460d6dd3d501139ba6668" };
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
@@ -193,242 +173,200 @@
     const secondaryAuth = getAuth(secondaryApp);
 
     let CURRENT_ROLE = 'scanner';
+    let STORE = { events: {}, stats: {} }; // Reactive State
 
-    // Auth & Permissions
-    onAuthStateChanged(auth, async (user) => {
-        if (!user) {
-            window.location.href = "index.html";
-        } else {
-            // Fetch Role
-            const snap = await get(ref(db, `users/${user.uid}`));
-            if(snap.exists()) {
-                CURRENT_ROLE = snap.val().role;
+    // AUTH
+    onAuthStateChanged(auth, async u => {
+        if (!u) window.location.href = "index.html";
+        else {
+            const s = await get(ref(db, `users/${u.uid}`));
+            if(s.exists()) {
+                CURRENT_ROLE = s.val().role;
                 document.getElementById('userRoleBadge').innerText = CURRENT_ROLE.toUpperCase();
-                
-                // Permission Logic: Hide tabs if not Admin
-                if(CURRENT_ROLE !== 'admin') {
-                    document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
-                }
+                if(CURRENT_ROLE!=='admin') document.querySelectorAll('.admin-only').forEach(e=>e.style.display='none');
             }
         }
     });
 
-    window.handleError = (error, context) => {
-        console.error(error);
-        let msg = error.message;
-        if (error.code === 'PERMISSION_DENIED') msg = "Database Locked! Check Rules.";
-        Swal.fire({ icon: 'error', title: 'Failed', text: msg });
-    };
+    // =========================================================
+    // 🚀 THE REACTIVE ENGINE (FIXED)
+    // =========================================================
+    
+    // 1. Fetch Events
+    onValue(ref(db, 'events'), snap => {
+        STORE.events = snap.val() || {};
+        renderDashboard(); // Re-render when events change
+        renderEventsList();
+    });
 
-    // =================================================
-    // 1. EVENT MANAGER
-    // =================================================
-    window.addNewEvent = async () => {
-        try {
-            const name = document.getElementById('evtName').value.trim();
-            const type = document.getElementById('evtType').value;
-            const btnsStr = document.getElementById('evtBtns').value.trim();
-
-            if (!name) return Swal.fire('Warning', 'Event Name Required', 'warning');
-
-            let buttons = btnsStr ? btnsStr.split(',').map(b => b.trim()) : (type === 'ACCESS' ? ['IN', 'OUT'] : ['SCAN']);
-
-            await push(ref(db, 'events'), { name, type, buttons, active: true, createdAt: Date.now() });
-
-            Swal.fire('Success', 'Event Created!', 'success');
-            document.getElementById('evtName').value = '';
-            document.getElementById('evtBtns').value = '';
-        } catch (error) { window.handleError(error, "Create Event"); }
-    };
-
-    window.deleteEvent = async (key) => {
-        if(CURRENT_ROLE !== 'admin') return Swal.fire('Access Denied', 'Moderators cannot delete events.', 'error');
-        if (confirm("Delete this event?")) {
-            try { await remove(ref(db, `events/${key}`)); } catch (e) { window.handleError(e, "Delete Event"); }
-        }
-    };
-
-    // Dashboard
-    onValue(ref(db, 'events'), (snapshot) => {
-        const listContainer = document.getElementById('eventsListContainer');
-        const dashContainer = document.getElementById('liveEventCards');
+    // 2. Fetch Stats (THIS WAS THE MISSING PART)
+    onValue(ref(db, 'stats'), snap => {
+        STORE.stats = snap.val() || {};
         
-        listContainer.innerHTML = ''; dashContainer.innerHTML = '';
-        const data = snapshot.val();
+        // Update Global Counters
+        document.getElementById('statRegCount').innerText = STORE.stats.total_registered || 0;
+        document.getElementById('statTotalScans').innerText = STORE.stats.total_scans || 0;
+        document.getElementById('statInside').innerText = STORE.stats.present_now || 0;
+
+        // Force Re-render of Dashboard Cards with new numbers
+        renderDashboard(); 
+    });
+
+    function renderDashboard() {
+        const container = document.getElementById('liveEventCards');
+        container.innerHTML = '';
         
-        if (!data) {
-            listContainer.innerHTML = '<div class="text-muted p-3">No events.</div>';
-            dashContainer.innerHTML = '<div class="col-12 text-center text-muted py-5">No Active Events</div>';
-            document.getElementById('statEventsCount').innerText = 0;
+        const eventKeys = Object.keys(STORE.events);
+        document.getElementById('statEventsCount').innerText = eventKeys.length;
+
+        if (eventKeys.length === 0) {
+            container.innerHTML = '<div class="col-12 text-center text-muted py-5">No Active Events</div>';
             return;
         }
 
-        const events = Object.entries(data);
-        document.getElementById('statEventsCount').innerText = events.length;
+        // Access Stats safely using Event Name
+        const eventStats = STORE.stats.events || {};
 
-        get(ref(db, 'stats/events')).then((statsSnap) => {
-            const allStats = statsSnap.val() || {};
-
-            events.forEach(([key, evt]) => {
-                const stat = allStats[evt.name] || { in: 0, out: 0, completed: 0 };
+        eventKeys.forEach(id => {
+            const evt = STORE.events[id];
+            // Access stats using the event NAME (matching how scanner writes)
+            const stat = eventStats[evt.name] || { in: 0, out: 0, completed: 0 };
+            
+            let html = '';
+            if(evt.type === 'ACCESS') {
+                const inC = parseInt(stat.in) || 0;
+                const outC = parseInt(stat.out) || 0;
+                const netC = inC - outC;
                 
-                // Dashboard Logic
-                let cardContent = '';
-                if(evt.type === 'ACCESS') {
-                    const net = (stat.in || 0) - (stat.out || 0);
-                    cardContent = `<div class="row text-center g-0 mt-3"><div class="col-4 border-end"><div class="live-stat-val text-success">${stat.in||0}</div><div class="live-stat-box">IN</div></div><div class="col-4 border-end"><div class="live-stat-val text-danger">${stat.out||0}</div><div class="live-stat-box">OUT</div></div><div class="col-4"><div class="live-stat-val text-primary">${net}</div><div class="live-stat-box">NET</div></div></div>`;
-                } else {
-                    cardContent = `<div class="text-center mt-3"><div class="live-stat-val text-info" style="font-size:2rem;">${stat.completed||0}</div><div class="live-stat-box">COMPLETED</div></div>`;
-                }
+                html = `
+                <div class="row text-center mt-3 g-0">
+                    <div class="col-4 border-end"><div class="live-stat-val text-success">${inC}</div><div class="live-stat-box">IN</div></div>
+                    <div class="col-4 border-end"><div class="live-stat-val text-danger">${outC}</div><div class="live-stat-box">OUT</div></div>
+                    <div class="col-4"><div class="live-stat-val text-primary">${netC}</div><div class="live-stat-box">NET</div></div>
+                </div>`;
+            } else {
+                html = `
+                <div class="text-center mt-3">
+                    <div class="live-stat-val text-info" style="font-size:2.5rem;">${stat.completed || 0}</div>
+                    <div class="live-stat-box">COMPLETED</div>
+                </div>`;
+            }
 
-                dashContainer.innerHTML += `<div class="col-md-4"><div class="stat-card p-4 border-top border-4 border-primary shadow-sm h-100"><div class="d-flex justify-content-between align-items-start"><h5 class="fw-bold mb-0 text-truncate">${evt.name}</h5><span class="badge bg-light text-dark border">${evt.type}</span></div>${cardContent}</div></div>`;
-                
-                // Admin Delete Button
-                const delBtn = CURRENT_ROLE === 'admin' ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteEvent('${key}')"><i class="bi bi-trash"></i></button>` : '';
-                listContainer.innerHTML += `<div class="d-flex justify-content-between align-items-center bg-light p-3 rounded mb-2"><div><div class="fw-bold">${evt.name}</div><div class="small text-muted">${evt.type}</div></div>${delBtn}</div>`;
-            });
+            container.innerHTML += `
+            <div class="col-md-4">
+                <div class="stat-card p-4 border-top border-4 border-primary shadow-sm h-100">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="fw-bold mb-0 text-truncate">${evt.name}</h5>
+                        <span class="badge bg-light text-dark border">${evt.type}</span>
+                    </div>
+                    ${html}
+                </div>
+            </div>`;
         });
-    });
+    }
 
-    onValue(ref(db, 'stats'), (snap) => {
-        const s = snap.val() || {};
-        document.getElementById('statRegCount').innerText = s.total_registered || 0;
-        document.getElementById('statTotalScans').innerText = s.total_scans || 0;
-        document.getElementById('statInside').innerText = s.present_now || 0;
-    });
+    function renderEventsList() {
+        const list = document.getElementById('eventsListContainer');
+        list.innerHTML = '';
+        Object.entries(STORE.events).forEach(([id, evt]) => {
+            const delBtn = CURRENT_ROLE === 'admin' ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteEvent('${id}')"><i class="bi bi-trash"></i></button>` : '';
+            list.innerHTML += `<div class="d-flex justify-content-between align-items-center bg-light p-3 rounded mb-2"><div><b>${evt.name}</b> <small class="text-muted">${evt.type}</small></div>${delBtn}</div>`;
+        });
+    }
 
-    // =================================================
-    // 2. REGISTRATION
-    // =================================================
-    window.processRegistration = async (shouldPrint) => {
-        try {
-            const text = document.getElementById('bulkText').value.trim();
-            if (!text) return Swal.fire('Empty', 'Paste data first', 'warning');
-            Swal.fire({title: 'Processing...', didOpen: () => Swal.showLoading()});
+    // =========================================================
+    // ACTIONS
+    // =========================================================
+    window.addNewEvent = async () => {
+        const name = document.getElementById('evtName').value.trim();
+        const type = document.getElementById('evtType').value;
+        if (!name) return Swal.fire('Error', 'Name required', 'error');
+        
+        let buttons = type === 'ACCESS' ? ['IN', 'OUT'] : ['SCAN'];
+        await push(ref(db, 'events'), { name, type, buttons, active: true, createdAt: Date.now() });
+        Swal.fire('Success', 'Event Created', 'success');
+        document.getElementById('evtName').value = '';
+    };
 
-            const lines = text.split('\n');
-            const updates = {};
-            const printList = [];
-            let count = 0;
+    window.deleteEvent = async (id) => {
+        if(CURRENT_ROLE !== 'admin') return Swal.fire('Denied', 'Admin Only', 'error');
+        if(confirm('Delete?')) await remove(ref(db, `events/${id}`));
+    };
 
-            lines.forEach(line => {
-                const parts = line.split(',');
-                if (parts.length >= 2) {
-                    const id = parts[0].trim();
-                    const name = parts[1].trim();
-                    if (id && name) {
-                        const safeKey = id.replace(/[.#$/[\]]/g, '_');
-                        updates[`scouts/${safeKey}`] = { id, name };
-                        printList.push({ id, name });
-                        count++;
-                    }
-                }
-            });
+    window.processRegistration = async (print) => {
+        const txt = document.getElementById('bulkText').value;
+        const lines = txt.split('\n');
+        const up = {}; let c = 0;
+        const list = [];
 
-            if (count > 0) {
-                updates['stats/total_registered'] = increment(count);
-                await update(ref(db), updates);
-                if (shouldPrint) await generatePDF(printList);
-                Swal.fire('Success', `Registered ${count}`, 'success');
-                document.getElementById('bulkText').value = "";
-            } else Swal.fire('Error', 'Invalid Format', 'error');
-        } catch (error) { window.handleError(error, "Registration"); }
+        lines.forEach(l => {
+            const [id, n] = l.split(',');
+            if(id && n) {
+                up[`scouts/${id.trim().replace(/[.#$/[\]]/g, '_')}`] = {id:id.trim(), name:n.trim()};
+                list.push({id:id.trim(), name:n.trim()});
+                c++;
+            }
+        });
+
+        if(c>0) {
+            up['stats/total_registered'] = increment(c);
+            await update(ref(db), up);
+            if(print) generatePDF(list);
+            Swal.fire('Done', `Added ${c}`, 'success');
+            document.getElementById('bulkText').value='';
+        }
     };
 
     window.generatePDF = async (list) => {
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('p', 'mm', 'a4');
-        const qrDiv = document.getElementById('qr-hidden');
-        const cardW = 47.5, cardH = 69, marginX = 10, marginY = 10;
+        const doc = new jsPDF('p','mm','a4');
+        const qr = document.getElementById('qr-hidden');
+        const w=47.5, h=69, mx=10, my=10;
 
-        for (let i = 0; i < list.length; i++) {
-            const scout = list[i];
-            if (i > 0 && i % 16 === 0) doc.addPage();
-            const col = i % 4;
-            const row = Math.floor((i % 16) / 4);
-            const x = marginX + (col * cardW);
-            const y = marginY + (row * cardH);
+        for(let i=0; i<list.length; i++) {
+            const s = list[i];
+            if(i>0 && i%16===0) doc.addPage();
+            const col = i%4; const row = Math.floor((i%16)/4);
+            const x = mx + (col*w); const y = my + (row*h);
 
-            doc.setDrawColor(200); doc.setLineWidth(0.2); doc.roundedRect(x+1, y+1, cardW-2, cardH-2, 3, 3, 'S');
-            doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.text("SCOUTPASS", x + cardW/2, y + 8, { align: "center" });
-
-            qrDiv.innerHTML = ""; new QRCode(qrDiv, { text: scout.id, width: 120, height: 120 });
-            await new Promise(r => setTimeout(r, 50));
-            const canvas = qrDiv.querySelector('canvas');
-            if(canvas) doc.addImage(canvas.toDataURL("image/png"), 'PNG', x + (cardW-30)/2, y + 12, 30, 30);
-
-            doc.setFontSize(11); doc.text(scout.id, x + cardW/2, y + 48, { align: "center" });
-            doc.setFontSize(8); doc.setFont("helvetica", "normal");
-            doc.text(doc.splitTextToSize(scout.name, cardW-6), x + cardW/2, y + 55, { align: "center" });
-        }
-        doc.save(`IDs_${new Date().toISOString().slice(0,10)}.pdf`);
-    };
-
-    // =================================================
-    // 3. STAFF (PASSWORD VISIBILITY RESTORED)
-    // =================================================
-    window.addStaffMember = async () => {
-        try {
-            const email = document.getElementById('stfEmail').value;
-            const pass = document.getElementById('stfPass').value;
-            const role = document.getElementById('stfRole').value;
-            if (!email || !pass) return Swal.fire('Warning', 'Fill fields', 'warning');
-
-            Swal.fire({title: 'Creating...', didOpen: () => Swal.showLoading()});
-            const u = await createUserWithEmailAndPassword(secondaryAuth, email, pass);
-            await set(ref(db, `users/${u.user.uid}`), { email, role, password: pass });
-            await signOut(secondaryAuth);
+            doc.rect(x+1, y+1, w-2, h-2);
+            doc.setFontSize(9); doc.text("SCOUTPASS", x+w/2, y+8, {align:'center'});
             
-            Swal.fire('Success', 'User Created', 'success');
-            document.getElementById('stfEmail').value = ''; document.getElementById('stfPass').value = '';
-        } catch (e) { window.handleError(e, "Add Staff"); }
+            qr.innerHTML=''; new QRCode(qr, {text:s.id, width:120, height:120});
+            await new Promise(r=>setTimeout(r,50));
+            const img = qr.querySelector('canvas').toDataURL('image/png');
+            doc.addImage(img, 'PNG', x+(w-30)/2, y+15, 30, 30);
+            
+            doc.setFontSize(11); doc.text(s.id, x+w/2, y+50, {align:'center'});
+            doc.setFontSize(8); doc.text(doc.splitTextToSize(s.name, w-6), x+w/2, y+57, {align:'center'});
+        }
+        doc.save('ids.pdf');
     };
 
-    onValue(ref(db, 'users'), (snap) => {
-        const tb = document.getElementById('staffTableBody'); tb.innerHTML = "";
-        if (snap.exists()) {
-            Object.entries(snap.val()).forEach(([uid, u]) => {
-                // FIXED: Password View logic
-                const passField = `<div class="input-group input-group-sm" style="width:150px"><input type="password" class="form-control" value="${u.password}" id="p-${uid}" readonly><button class="btn btn-outline-secondary" onclick="toggleP('${uid}')"><i class="bi bi-eye"></i></button></div>`;
-                
-                // Show delete only if Admin
-                const delBtn = CURRENT_ROLE === 'admin' ? `<button class="btn btn-sm btn-danger" onclick="removeStaff('${uid}')">Del</button>` : '';
+    // UTILS
+    window.addStaffMember = async () => {
+        const e = document.getElementById('stfEmail').value;
+        const p = document.getElementById('stfPass').value;
+        const r = document.getElementById('stfRole').value;
+        try {
+            const u = await createUserWithEmailAndPassword(secAuth, e, p);
+            await set(ref(db, `users/${u.user.uid}`), {email:e, role:r, password:p});
+            await signOut(secAuth);
+            Swal.fire('Created','','success');
+        } catch(e){Swal.fire('Error',e.message,'error');}
+    };
 
-                tb.innerHTML += `<tr><td>${u.email}</td><td>${u.role}</td><td>${passField}</td><td>${delBtn}</td></tr>`;
-            });
-        }
+    onValue(ref(db, 'users'), s => {
+        const tb = document.getElementById('staffTableBody'); tb.innerHTML='';
+        if(s.exists()) Object.entries(s.val()).forEach(([uid, u]) => {
+            const del = CURRENT_ROLE==='admin' ? `<button class="btn btn-sm btn-danger" onclick="remS('${uid}')">Del</button>`:'';
+            tb.innerHTML += `<tr><td>${u.email}</td><td>${u.role}</td><td><input type="password" value="${u.password}" id="p-${uid}" readonly style="width:80px;border:none"><i class="bi bi-eye ms-2" onclick="togP('${uid}')"></i></td><td>${del}</td></tr>`;
+        });
     });
 
-    window.toggleP = (id) => {
-        const x = document.getElementById('p-' + id);
-        x.type = x.type === 'password' ? 'text' : 'password';
-    };
-
-    window.removeStaff = async(uid)=>{
-        if(CURRENT_ROLE !== 'admin') return;
-        if(confirm("Delete?")) await remove(ref(db,`users/${uid}`));
-    };
-
-    // =================================================
-    // 4. UTILS
-    // =================================================
-    window.performSearch = async () => {
-        const id = document.getElementById('searchInput').value.trim();
-        if(!id) return;
-        try {
-            const snap = await get(ref(db, `scouts/${id.replace(/[.#$/[\]]/g, '_')}`));
-            if(snap.exists()) {
-                const s = snap.val();
-                document.getElementById('resName').innerText = s.name;
-                document.getElementById('resID').innerText = s.id;
-                document.getElementById('searchResult').style.display = "block";
-                window.foundScout = s;
-            } else { Swal.fire('Not Found', 'Invalid ID', 'error'); document.getElementById('searchResult').style.display = "none"; }
-        } catch(e){ window.handleError(e, "Search"); }
-    };
-    window.downloadSingleID = () => { if(window.foundScout) generatePDF([window.foundScout]); };
-
-    window.toggleScannerLock=(el)=>set(ref(db,'system/scannerLock'),el.checked);
+    window.togP=(id)=>{const x=document.getElementById('p-'+id);x.type=x.type==='password'?'text':'password'};
+    window.remS=async(uid)=>{if(CURRENT_ROLE==='admin'&&confirm('Delete?'))await remove(ref(db,`users/${uid}`))};
+    
     window.initiateSystemReset=async()=>{
         const {value:c}=await Swal.fire({title:'Master Key',input:'password'});
         if(c==='200431504082'){
@@ -438,31 +376,32 @@
         }
     };
 
-    window.exportScoutsCSV=async()=>{
-        const s=await get(ref(db,'scouts'));
+    window.performSearch=async()=>{
+        const id=document.getElementById('searchInput').value.trim();
+        const s=await get(ref(db,`scouts/${id.replace(/[.#$/[\]]/g,'_')}`));
         if(s.exists()){
-            let c="ID,Name\n"; Object.values(s.val()).forEach(v=>c+=`${v.id},${v.name}\n`);
-            const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([c])); a.download="Scouts.csv"; a.click();
-        }
+            document.getElementById('resName').innerText=s.val().name;
+            document.getElementById('resID').innerText=s.val().id;
+            document.getElementById('searchResult').style.display='block';
+            window.foundScout=s.val();
+        } else Swal.fire('Not Found','','error');
     };
+    window.downloadSingleID=()=>{if(window.foundScout)generatePDF([window.foundScout])};
+
+    window.toggleScannerLock=(el)=>set(ref(db,'system/scannerLock'),el.checked);
+    window.exportScoutsCSV=async()=>{const s=await get(ref(db,'scouts'));if(s.exists()){let c="ID,Name\n";Object.values(s.val()).forEach(v=>c+=`${v.id},${v.name}\n`);const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c]));a.download="Scouts.csv";a.click();}};
     window.importCSVFile=(i)=>{Papa.parse(i.files[0],{complete:(r)=>{let t="";r.data.forEach(d=>{if(d.length>=2)t+=`${d[0]},${d[1]}\n`});document.getElementById('bulkText').value=t;}})};
 
-    window.showSection=(id, el)=>{document.querySelectorAll('.section').forEach(s=>s.style.display='none');document.getElementById('sec-'+id).style.display='block';document.querySelectorAll('.nav-link').forEach(n=>n.classList.remove('active'));el.classList.add('active');};
+    window.showSection=(id,el)=>{document.querySelectorAll('.section').forEach(s=>s.style.display='none');document.getElementById('sec-'+id).style.display='block';document.querySelectorAll('.nav-link').forEach(n=>n.classList.remove('active'));el.classList.add('active');};
     window.logout=()=>signOut(auth).then(()=>window.location.href="index.html");
 
-    // ATTACH GLOBALS
-    window.addNewEvent = addNewEvent;
-    window.deleteEvent = deleteEvent;
-    window.processRegistration = processRegistration;
-    window.addStaffMember = addStaffMember;
-    window.removeStaff = removeStaff;
-    window.performSearch = performSearch;
-    window.downloadSingleID = downloadSingleID;
-    window.toggleScannerLock = toggleScannerLock;
-    window.initiateSystemReset = initiateSystemReset;
-    window.exportScoutsCSV = exportScoutsCSV;
-    window.importCSVFile = importCSVFile;
-    window.toggleP = toggleP;
+    // ATTACH
+    window.addNewEvent = addNewEvent; window.deleteEvent = deleteEvent;
+    window.processRegistration = processRegistration; window.addStaffMember = addStaffMember;
+    window.performSearch = performSearch; window.downloadSingleID = downloadSingleID;
+    window.toggleScannerLock = toggleScannerLock; window.initiateSystemReset = initiateSystemReset;
+    window.exportScoutsCSV = exportScoutsCSV; window.importCSVFile = importCSVFile;
+    window.togP = toggleP; window.remS = remS;
 </script>
 </body>
 </html>
