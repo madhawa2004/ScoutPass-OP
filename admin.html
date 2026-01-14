@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScoutPass | War Room V17</title>
+    <title>ScoutPass | Command Hub V18</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#5285E8">
@@ -30,9 +30,8 @@
         .live-stat-val { font-size: 2rem; font-weight: 800; line-height: 1; transition: color 0.3s; }
         .admin-only { display: block; }
         #qr-hidden { display: none; }
-        
-        /* DEBUG BOX */
         #debugBox { position: fixed; bottom: 0; right: 0; width: 100%; height: 150px; background: #000; color: #0f0; font-family: monospace; font-size: 10px; padding: 10px; overflow-y: scroll; z-index: 9999; display: none; opacity: 0.8; }
+        .pass-field { border:none; background:transparent; width:100%; }
     </style>
 </head>
 <body>
@@ -133,7 +132,7 @@
             <h5 class="fw-bold">Add Staff</h5>
             <div class="row g-2 mt-2">
                 <div class="col-md-3"><input type="email" id="stfEmail" class="form-control" placeholder="Email"></div>
-                <div class="col-md-3"><input type="text" id="stfPass" class="form-control" placeholder="Password"></div>
+                <div class="col-md-3"><input type="text" id="stfPass" class="form-control" placeholder="Password (6+ chars)"></div>
                 <div class="col-md-3">
                     <select id="stfRole" class="form-select">
                         <option value="scanner">Scanner</option>
@@ -144,7 +143,12 @@
                 <div class="col-md-3"><button onclick="addStaffMember()" class="btn btn-success w-100">Create</button></div>
             </div>
         </div>
-        <div class="stat-card"><h5 class="fw-bold">Staff List</h5><table class="table table-hover"><thead><tr><th>Email</th><th>Role</th><th>Password</th><th>Action</th></tr></thead><tbody id="staffTableBody"></tbody></table></div>
+        <div class="stat-card"><h5 class="fw-bold">Staff List</h5>
+            <table class="table table-hover align-middle">
+                <thead><tr><th>Email</th><th>Role</th><th>Password</th><th>Action</th></tr></thead>
+                <tbody id="staffTableBody"></tbody>
+            </table>
+        </div>
     </div>
 
     <div id="sec-settings" class="section animate__animated animate__fadeIn" style="display:none;">
@@ -169,12 +173,11 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
     const secondaryApp = initializeApp(firebaseConfig, "Secondary");
-    const secondaryAuth = getAuth(secondaryApp);
+    const secondaryAuth = getAuth(secondaryApp); // Correct Variable Name
 
     let CURRENT_ROLE = 'scanner';
     let STATE = { events: {}, stats: {} };
 
-    // Debug Logger
     function logDebug(msg) {
         const d = document.getElementById('debugBox');
         const t = new Date().toLocaleTimeString();
@@ -195,11 +198,7 @@
         }
     });
 
-    // =========================================================
-    // 🚀 THE UNIVERSAL RECEIVER (V17 Core)
-    // =========================================================
-    
-    // 1. Fetch Events
+    // 1. DATA SYNC (UNIVERSAL)
     onValue(ref(db, 'events'), snap => {
         STATE.events = snap.val() || {};
         logDebug(`Events Loaded: ${Object.keys(STATE.events).length}`);
@@ -207,20 +206,12 @@
         renderEventsList();
     });
 
-    // 2. Fetch Stats
     onValue(ref(db, 'stats'), snap => {
         STATE.stats = snap.val() || {};
-        
-        // Log Raw Stats for Debugging
         logDebug(`Stats Update: Total=${STATE.stats.total_scans || 0}`);
-        if(STATE.stats.events) logDebug(`Event Stats Keys: ${Object.keys(STATE.stats.events).join(', ')}`);
-
-        // Update Global Counters
         document.getElementById('statRegCount').innerText = STATE.stats.total_registered || 0;
         document.getElementById('statTotalScans').innerText = STATE.stats.total_scans || 0;
         document.getElementById('statInside').innerText = STATE.stats.present_now || 0;
-
-        // Force Re-render
         renderDashboard(); 
     });
 
@@ -240,19 +231,12 @@
         eventKeys.forEach(id => {
             const evt = STATE.events[id];
             
-            // 🔥 THE UNIVERSAL MATCHER 🔥
-            // 1. Try Match by ID (New Scanner)
-            // 2. Try Match by Name (Old Scanner)
-            // 3. Try Match by Clean Name (Just in case)
+            // HYBRID LOOKUP
             let stat = eventStats[id];
-            
             if (!stat) {
-                // Fallback: Loop through all stats to find a match by NAME
                 const matchingKey = Object.keys(eventStats).find(k => k === evt.name || k.trim() === evt.name.trim());
                 if(matchingKey) stat = eventStats[matchingKey];
             }
-
-            // Default if no match found
             stat = stat || { in: 0, out: 0, completed: 0 };
             
             let html = '';
@@ -260,19 +244,9 @@
                 const inC = parseInt(stat.in) || 0;
                 const outC = parseInt(stat.out) || 0;
                 const netC = inC - outC;
-                
-                html = `
-                <div class="row text-center mt-3 g-0">
-                    <div class="col-4 border-end"><div class="live-stat-val text-success">${inC}</div><small class="text-muted fw-bold">IN</small></div>
-                    <div class="col-4 border-end"><div class="live-stat-val text-danger">${outC}</div><small class="text-muted fw-bold">OUT</small></div>
-                    <div class="col-4"><div class="live-stat-val text-primary">${netC}</div><small class="text-muted fw-bold">NET</small></div>
-                </div>`;
+                html = `<div class="row text-center mt-3 g-0"><div class="col-4 border-end"><div class="live-stat-val text-success">${inC}</div><small class="text-muted fw-bold">IN</small></div><div class="col-4 border-end"><div class="live-stat-val text-danger">${outC}</div><small class="text-muted fw-bold">OUT</small></div><div class="col-4"><div class="live-stat-val text-primary">${netC}</div><small class="text-muted fw-bold">NET</small></div></div>`;
             } else {
-                html = `
-                <div class="text-center mt-3">
-                    <div class="live-stat-val text-info" style="font-size:2.5rem;">${stat.completed || 0}</div>
-                    <small class="text-muted fw-bold">COMPLETED</small>
-                </div>`;
+                html = `<div class="text-center mt-3"><div class="live-stat-val text-info" style="font-size:2.5rem;">${stat.completed || 0}</div><small class="text-muted fw-bold">COMPLETED</small></div>`;
             }
 
             container.innerHTML += `<div class="col-md-4"><div class="stat-card p-4 border-top border-4 border-primary shadow-sm h-100"><div class="d-flex justify-content-between"><h5 class="fw-bold mb-0 text-truncate">${evt.name}</h5><span class="badge bg-light text-dark border">${evt.type}</span></div>${html}</div></div>`;
@@ -347,28 +321,49 @@
         doc.save('ids.pdf');
     };
 
+    // --- FIXED STAFF MANAGER ---
     window.addStaffMember = async () => {
         const e = document.getElementById('stfEmail').value;
         const p = document.getElementById('stfPass').value;
         const r = document.getElementById('stfRole').value;
+        if (!e || !p) return Swal.fire('Warning', 'Fill fields', 'warning');
+
         try {
-            const u = await createUserWithEmailAndPassword(secAuth, e, p);
+            Swal.fire({title: 'Creating...', didOpen: () => Swal.showLoading()});
+            // FIX: Use secondaryAuth correctly
+            const u = await createUserWithEmailAndPassword(secondaryAuth, e, p);
             await set(ref(db, `users/${u.user.uid}`), {email:e, role:r, password:p});
-            await signOut(secAuth);
+            await signOut(secondaryAuth);
             Swal.fire('Created','','success');
-        } catch(e){Swal.fire('Error',e.message,'error');}
+            document.getElementById('stfEmail').value=''; document.getElementById('stfPass').value='';
+        } catch(err){Swal.fire('Error',err.message,'error');}
     };
 
     onValue(ref(db, 'users'), s => {
         const tb = document.getElementById('staffTableBody'); tb.innerHTML='';
         if(s.exists()) Object.entries(s.val()).forEach(([uid, u]) => {
-            const del = CURRENT_ROLE==='admin' ? `<button class="btn btn-sm btn-danger" onclick="remS('${uid}')">Del</button>`:'';
-            tb.innerHTML += `<tr><td>${u.email}</td><td>${u.role}</td><td>***</td><td>${del}</td></tr>`;
+            // FIX: Password Visibility & Delete Button
+            const del = CURRENT_ROLE==='admin' ? `<button class="btn btn-sm btn-danger ms-2" onclick="remS('${uid}')">Del</button>`:'';
+            
+            tb.innerHTML += `
+            <tr>
+                <td>${u.email}</td>
+                <td><span class="badge bg-secondary">${u.role}</span></td>
+                <td>
+                    <div class="input-group input-group-sm" style="max-width:150px">
+                        <input type="password" value="${u.password}" id="p-${uid}" class="form-control" readonly>
+                        <button class="btn btn-outline-secondary" onclick="togP('${uid}')"><i class="bi bi-eye"></i></button>
+                    </div>
+                </td>
+                <td>${del}</td>
+            </tr>`;
         });
     });
 
+    window.togP=(id)=>{const x=document.getElementById('p-'+id);x.type=x.type==='password'?'text':'password'};
     window.remS=async(uid)=>{if(CURRENT_ROLE==='admin'&&confirm('Delete?'))await remove(ref(db,`users/${uid}`))};
-    
+    // ---------------------------
+
     window.initiateSystemReset=async()=>{
         const {value:c}=await Swal.fire({title:'Master Key',input:'password'});
         if(c==="200431504082"){
@@ -402,7 +397,7 @@
     window.performSearch = performSearch; window.downloadSingleID = downloadSingleID;
     window.toggleScannerLock = toggleScannerLock; window.initiateSystemReset = initiateSystemReset;
     window.exportScoutsCSV = exportScoutsCSV; window.importCSVFile = importCSVFile;
-    window.remS = remS;
+    window.togP = togP; window.remS = remS;
 </script>
 </body>
 </html>
