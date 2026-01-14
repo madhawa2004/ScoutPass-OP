@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScoutPass | Command Hub V15.2</title>
+    <title>ScoutPass | War Room V16</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#5285E8">
@@ -21,18 +21,15 @@
         :root { --bg-light: #F0F5F4; --text-dark: #181818; --primary-blue: #5285E8; --accent-lime: #B8FB4C; --white: #ffffff; --sidebar-width: 260px; }
         body { background-color: var(--bg-light); color: var(--text-dark); font-family: 'Outfit', sans-serif; overflow-x: hidden; }
         .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: var(--sidebar-width); background: var(--white); border-right: 1px solid rgba(0,0,0,0.05); padding: 25px; z-index: 1000; }
-        .brand-logo { font-size: 1.6rem; font-weight: 700; color: var(--text-dark); margin-bottom: 40px; }
         .nav-link { color: #6c757d; font-weight: 500; padding: 12px 15px; border-radius: 12px; margin-bottom: 8px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s; }
         .nav-link:hover, .nav-link.active { background: rgba(82, 133, 232, 0.1); color: var(--primary-blue); font-weight: 600; }
         .main-content { margin-left: var(--sidebar-width); padding: 30px; }
         .stat-card { background: var(--white); border-radius: 20px; padding: 25px; border: 1px solid rgba(0,0,0,0.02); box-shadow: 0 4px 20px rgba(0,0,0,0.03); height: 100%; transition: transform 0.2s; }
         .stat-card:hover { transform: translateY(-2px); }
         .card-number { font-size: 2.5rem; font-weight: 700; color: var(--text-dark); margin-bottom: 0; }
-        .live-stat-box { font-size: 0.7rem; font-weight: 700; color: #adb5bd; letter-spacing: 1px; margin-top: 5px; }
-        .live-stat-val { font-size: 1.8rem; font-weight: 800; line-height: 1; transition: color 0.3s; }
+        .live-stat-val { font-size: 2rem; font-weight: 800; line-height: 1; transition: color 0.3s; }
         .admin-only { display: block; }
         #qr-hidden { display: none; }
-        .search-result-card { text-align: center; display: none; background: #f8f9fa; border-radius: 15px; padding: 20px; margin-top: 20px; border: 2px dashed #dee2e6; }
     </style>
 </head>
 <body>
@@ -40,17 +37,15 @@
 <div id="qr-hidden"></div>
 
 <div class="sidebar">
-    <div class="brand-logo"><i class="bi bi-shield-lock-fill text-primary me-2"></i>Scout<span style="color:var(--primary-blue)">Pass</span></div>
-    <div class="nav flex-column">
-        <div class="nav-link active" onclick="showSection('dashboard', this)"><i class="bi bi-grid-1x2-fill"></i> War Room</div>
-        <div class="nav-link" onclick="showSection('search', this)"><i class="bi bi-search"></i> Scout Search</div>
-        <div class="nav-link" onclick="showSection('registration', this)"><i class="bi bi-person-vcard-fill"></i> Registration</div>
-        <div class="nav-link" onclick="showSection('events', this)"><i class="bi bi-calendar-check-fill"></i> Events</div>
-        <div class="nav-link admin-only" onclick="showSection('staff', this)"><i class="bi bi-people-fill"></i> Staff Manager</div>
-        <div class="nav-link admin-only" onclick="showSection('settings', this)"><i class="bi bi-sliders"></i> Settings</div>
-        <div class="mt-auto pt-4 border-top">
-            <div class="nav-link text-danger" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Logout</div>
-        </div>
+    <h3 class="fw-bold mb-4">Scout<span style="color:var(--primary-blue)">Pass</span></h3>
+    <div class="nav-link active" onclick="showSection('dashboard', this)"><i class="bi bi-grid-1x2-fill"></i> War Room</div>
+    <div class="nav-link" onclick="showSection('search', this)"><i class="bi bi-search"></i> Scout Search</div>
+    <div class="nav-link" onclick="showSection('registration', this)"><i class="bi bi-person-vcard-fill"></i> Registration</div>
+    <div class="nav-link" onclick="showSection('events', this)"><i class="bi bi-calendar-check-fill"></i> Events</div>
+    <div class="nav-link admin-only" onclick="showSection('staff', this)"><i class="bi bi-people-fill"></i> Staff Manager</div>
+    <div class="nav-link admin-only" onclick="showSection('settings', this)"><i class="bi bi-sliders"></i> Settings</div>
+    <div class="mt-auto pt-4 border-top">
+        <div class="nav-link text-danger" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Logout</div>
     </div>
 </div>
 
@@ -79,7 +74,7 @@
                         <input type="text" id="searchInput" class="form-control form-control-lg" placeholder="Enter ID (e.g., KG001)">
                         <button class="btn btn-primary" onclick="performSearch()">Search</button>
                     </div>
-                    <div id="searchResult" class="search-result-card">
+                    <div id="searchResult" class="search-result-card" style="display:none">
                         <h3 class="fw-bold" id="resName">-</h3>
                         <div class="badge bg-dark fs-6 mb-3" id="resID">-</div>
                         <button class="btn btn-outline-primary mt-1" onclick="downloadSingleID()">Download ID Card</button>
@@ -160,13 +155,8 @@
     import { getAuth, signOut, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getDatabase, ref, onValue, set, get, update, push, remove, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // CONFIG
     const firebaseConfig = { apiKey: "AIzaSyBZzwTD7gSTmsQhSvQYARZP_bUfKXW4Myg", authDomain: "scoutpak-6fed9.firebaseapp.com", databaseURL: "https://scoutpak-6fed9-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "scoutpak-6fed9", storageBucket: "scoutpak-6fed9.firebasestorage.app", messagingSenderId: "294082875833", appId: "1:294082875833:web:3460d6dd3d501139ba6668" };
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
-    const secondaryApp = initializeApp(firebaseConfig, "Secondary");
-    const secondaryAuth = getAuth(secondaryApp);
+    const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getDatabase(app); const secApp = initializeApp(firebaseConfig, "Secondary"); const secAuth = getAuth(secApp);
 
     let CURRENT_ROLE = 'scanner';
     let STATE = { events: {}, stats: {} };
@@ -180,14 +170,15 @@
                 CURRENT_ROLE = s.val().role;
                 document.getElementById('userRoleBadge').innerText = CURRENT_ROLE.toUpperCase();
                 if(CURRENT_ROLE!=='admin') document.querySelectorAll('.admin-only').forEach(e=>e.style.display='none');
-                
-                // IMPORTANT: Re-render events list after we know the role
                 renderEventsList();
             }
         }
     });
 
-    // 1. DATA LISTENERS
+    // =========================================================
+    // 🚀 THE HYBRID ENGINE (V16 Core)
+    // =========================================================
+    
     onValue(ref(db, 'events'), snap => {
         STATE.events = snap.val() || {};
         renderDashboard(); 
@@ -205,6 +196,7 @@
     function renderDashboard() {
         const container = document.getElementById('liveEventCards');
         container.innerHTML = '';
+        
         const eventKeys = Object.keys(STATE.events);
         document.getElementById('statEventsCount').innerText = eventKeys.length;
 
@@ -217,15 +209,18 @@
 
         eventKeys.forEach(id => {
             const evt = STATE.events[id];
-            const stat = eventStats[id] || { in: 0, out: 0, completed: 0 }; // ID based lookup
+            
+            // 🔥 HYBRID LOOKUP: Try finding data by ID first, then by Name
+            // This fixes the issue where Scanner might write to Name but Admin looks for ID
+            const stat = eventStats[id] || eventStats[evt.name] || { in: 0, out: 0, completed: 0 };
             
             let html = '';
             if(evt.type === 'ACCESS') {
                 const inC = parseInt(stat.in) || 0;
                 const outC = parseInt(stat.out) || 0;
-                html = `<div class="row text-center mt-3 g-0"><div class="col-4 border-end"><div class="live-stat-val text-success">${inC}</div><div class="live-stat-box">IN</div></div><div class="col-4 border-end"><div class="live-stat-val text-danger">${outC}</div><div class="live-stat-box">OUT</div></div><div class="col-4"><div class="live-stat-val text-primary">${inC - outC}</div><div class="live-stat-box">NET</div></div></div>`;
+                html = `<div class="row text-center mt-3 g-0"><div class="col-4 border-end"><div class="live-stat-val text-success">${inC}</div><small class="text-muted fw-bold">IN</small></div><div class="col-4 border-end"><div class="live-stat-val text-danger">${outC}</div><small class="text-muted fw-bold">OUT</small></div><div class="col-4"><div class="live-stat-val text-primary">${inC - outC}</div><small class="text-muted fw-bold">NET</small></div></div>`;
             } else {
-                html = `<div class="text-center mt-3"><div class="live-stat-val text-info" style="font-size:2.5rem;">${stat.completed || 0}</div><div class="live-stat-box">COMPLETED</div></div>`;
+                html = `<div class="text-center mt-3"><div class="live-stat-val text-info" style="font-size:2.5rem;">${stat.completed || 0}</div><small class="text-muted fw-bold">COMPLETED</small></div>`;
             }
 
             container.innerHTML += `<div class="col-md-4"><div class="stat-card p-4 border-top border-4 border-primary shadow-sm h-100"><div class="d-flex justify-content-between"><h5 class="fw-bold mb-0 text-truncate">${evt.name}</h5><span class="badge bg-light text-dark border">${evt.type}</span></div>${html}</div></div>`;
@@ -236,13 +231,12 @@
         const list = document.getElementById('eventsListContainer');
         list.innerHTML = '';
         Object.entries(STATE.events).forEach(([id, evt]) => {
-            // FIXED: Delete button only shows if Role is loaded AND is Admin
             const delBtn = (CURRENT_ROLE === 'admin') ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteEvent('${id}')"><i class="bi bi-trash"></i></button>` : '';
             list.innerHTML += `<div class="d-flex justify-content-between align-items-center bg-light p-3 rounded mb-2"><div><b>${evt.name}</b> <small class="text-muted">${evt.type}</small></div>${delBtn}</div>`;
         });
     }
 
-    // 2. ACTIONS
+    // ACTIONS
     window.addNewEvent = async () => {
         const name = document.getElementById('evtName').value.trim();
         const type = document.getElementById('evtType').value;
@@ -255,7 +249,7 @@
 
     window.deleteEvent = async (id) => {
         if(CURRENT_ROLE !== 'admin') return Swal.fire('Denied', 'Admin Only', 'error');
-        if(confirm('Delete this event?')) await remove(ref(db, `events/${id}`));
+        if(confirm('Delete?')) await remove(ref(db, `events/${id}`));
     };
 
     window.processRegistration = async (print) => {
@@ -301,7 +295,6 @@
         doc.save('ids.pdf');
     };
 
-    // UTILS
     window.addStaffMember = async () => {
         const e = document.getElementById('stfEmail').value;
         const p = document.getElementById('stfPass').value;
@@ -352,7 +345,6 @@
     window.showSection=(id,el)=>{document.querySelectorAll('.section').forEach(s=>s.style.display='none');document.getElementById('sec-'+id).style.display='block';document.querySelectorAll('.nav-link').forEach(n=>n.classList.remove('active'));el.classList.add('active');};
     window.logout=()=>signOut(auth).then(()=>window.location.href="index.html");
 
-    // ATTACH GLOBALS
     window.addNewEvent = addNewEvent; window.deleteEvent = deleteEvent;
     window.processRegistration = processRegistration; window.addStaffMember = addStaffMember;
     window.performSearch = performSearch; window.downloadSingleID = downloadSingleID;
