@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScoutPass | Command Hub V15.1</title>
+    <title>ScoutPass | Command Hub V15.2</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#5285E8">
@@ -28,9 +28,6 @@
         .stat-card { background: var(--white); border-radius: 20px; padding: 25px; border: 1px solid rgba(0,0,0,0.02); box-shadow: 0 4px 20px rgba(0,0,0,0.03); height: 100%; transition: transform 0.2s; }
         .stat-card:hover { transform: translateY(-2px); }
         .card-number { font-size: 2.5rem; font-weight: 700; color: var(--text-dark); margin-bottom: 0; }
-        .btn-lime { background: var(--accent-lime); color: var(--text-dark); border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; transition: 0.3s; }
-        .btn-blue { background: var(--primary-blue); color: var(--white); border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; transition: 0.3s; }
-        .btn-danger-custom { background: #ff4d4d; color: white; border:none; padding: 10px 20px; border-radius: 12px; font-weight: 600; }
         .live-stat-box { font-size: 0.7rem; font-weight: 700; color: #adb5bd; letter-spacing: 1px; margin-top: 5px; }
         .live-stat-val { font-size: 1.8rem; font-weight: 800; line-height: 1; transition: color 0.3s; }
         .admin-only { display: block; }
@@ -80,7 +77,7 @@
                     <h5 class="fw-bold mb-4">Find a Scout</h5>
                     <div class="input-group mb-3">
                         <input type="text" id="searchInput" class="form-control form-control-lg" placeholder="Enter ID (e.g., KG001)">
-                        <button class="btn btn-blue" onclick="performSearch()">Search</button>
+                        <button class="btn btn-primary" onclick="performSearch()">Search</button>
                     </div>
                     <div id="searchResult" class="search-result-card">
                         <h3 class="fw-bold" id="resName">-</h3>
@@ -100,7 +97,7 @@
                     <div class="alert alert-light border small">Format: <b>ID, Name</b><br>Ex: <code>KG001, Kamal Perera</code></div>
                     <textarea id="bulkText" class="form-control mb-3" rows="8"></textarea>
                     <div class="d-grid gap-2">
-                        <button class="btn btn-lime" onclick="processRegistration(true)">Register & Print IDs</button>
+                        <button class="btn btn-success" onclick="processRegistration(true)">Register & Print IDs</button>
                         <button class="btn btn-dark" onclick="processRegistration(false)">Register Only</button>
                     </div>
                 </div>
@@ -121,8 +118,7 @@
                     <h5 class="fw-bold mb-3">Create Event</h5>
                     <input type="text" id="evtName" class="form-control mb-2" placeholder="Name (e.g. Lunch)">
                     <select id="evtType" class="form-select mb-2"><option value="ACCESS">Gate (IN/OUT)</option><option value="ACTIVITY">Activity (Completion)</option></select>
-                    <input type="text" id="evtBtns" class="form-control mb-3" placeholder="Buttons (Optional)">
-                    <button onclick="addNewEvent()" class="btn btn-blue w-100">Add Event</button>
+                    <button onclick="addNewEvent()" class="btn btn-primary w-100">Add Event</button>
                 </div>
             </div>
             <div class="col-md-8"><div class="stat-card"><h5 class="fw-bold mb-3">Active Events</h5><div id="eventsListContainer"></div></div></div>
@@ -134,7 +130,7 @@
             <h5 class="fw-bold">Add Staff</h5>
             <div class="row g-2 mt-2">
                 <div class="col-md-3"><input type="email" id="stfEmail" class="form-control" placeholder="Email"></div>
-                <div class="col-md-3"><input type="text" id="stfPass" class="form-control" placeholder="Password (6+ chars)"></div>
+                <div class="col-md-3"><input type="text" id="stfPass" class="form-control" placeholder="Password"></div>
                 <div class="col-md-3">
                     <select id="stfRole" class="form-select">
                         <option value="scanner">Scanner</option>
@@ -142,16 +138,16 @@
                         <option value="admin">Admin</option>
                     </select>
                 </div>
-                <div class="col-md-3"><button onclick="addStaffMember()" class="btn btn-lime w-100">Create</button></div>
+                <div class="col-md-3"><button onclick="addStaffMember()" class="btn btn-success w-100">Create</button></div>
             </div>
         </div>
-        <div class="stat-card"><h5 class="fw-bold">Staff List</h5><table class="table table-custom"><thead><tr><th>Email</th><th>Role</th><th>Password</th><th>Action</th></tr></thead><tbody id="staffTableBody"></tbody></table></div>
+        <div class="stat-card"><h5 class="fw-bold">Staff List</h5><table class="table table-hover"><thead><tr><th>Email</th><th>Role</th><th>Password</th><th>Action</th></tr></thead><tbody id="staffTableBody"></tbody></table></div>
     </div>
 
     <div id="sec-settings" class="section animate__animated animate__fadeIn" style="display:none;">
         <div class="row">
             <div class="col-md-6"><div class="stat-card border-warning border-start border-4"><h5>Scanner Lock</h5><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="scannerLockSwitch" onchange="toggleScannerLock(this)"> <label>Lock All Apps</label></div></div></div>
-            <div class="col-md-6"><div class="stat-card border-danger border-start border-4"><h5 class="text-danger">System Reset</h5><button onclick="initiateSystemReset()" class="btn btn-danger-custom w-100 mt-2">Reset Data</button></div></div>
+            <div class="col-md-6"><div class="stat-card border-danger border-start border-4"><h5 class="text-danger">System Reset</h5><button onclick="initiateSystemReset()" class="btn btn-danger w-100 mt-2">Reset Data</button></div></div>
         </div>
     </div>
 </div>
@@ -173,7 +169,7 @@
     const secondaryAuth = getAuth(secondaryApp);
 
     let CURRENT_ROLE = 'scanner';
-    let STORE = { events: {}, stats: {} }; // Reactive State
+    let STATE = { events: {}, stats: {} };
 
     // AUTH
     onAuthStateChanged(auth, async u => {
@@ -184,39 +180,32 @@
                 CURRENT_ROLE = s.val().role;
                 document.getElementById('userRoleBadge').innerText = CURRENT_ROLE.toUpperCase();
                 if(CURRENT_ROLE!=='admin') document.querySelectorAll('.admin-only').forEach(e=>e.style.display='none');
+                
+                // IMPORTANT: Re-render events list after we know the role
+                renderEventsList();
             }
         }
     });
 
-    // =========================================================
-    // 🚀 THE REACTIVE ENGINE (FIXED)
-    // =========================================================
-    
-    // 1. Fetch Events
+    // 1. DATA LISTENERS
     onValue(ref(db, 'events'), snap => {
-        STORE.events = snap.val() || {};
-        renderDashboard(); // Re-render when events change
+        STATE.events = snap.val() || {};
+        renderDashboard(); 
         renderEventsList();
     });
 
-    // 2. Fetch Stats (THIS WAS THE MISSING PART)
     onValue(ref(db, 'stats'), snap => {
-        STORE.stats = snap.val() || {};
-        
-        // Update Global Counters
-        document.getElementById('statRegCount').innerText = STORE.stats.total_registered || 0;
-        document.getElementById('statTotalScans').innerText = STORE.stats.total_scans || 0;
-        document.getElementById('statInside').innerText = STORE.stats.present_now || 0;
-
-        // Force Re-render of Dashboard Cards with new numbers
-        renderDashboard(); 
+        STATE.stats = snap.val() || {};
+        document.getElementById('statRegCount').innerText = STATE.stats.total_registered || 0;
+        document.getElementById('statTotalScans').innerText = STATE.stats.total_scans || 0;
+        document.getElementById('statInside').innerText = STATE.stats.present_now || 0;
+        renderDashboard();
     });
 
     function renderDashboard() {
         const container = document.getElementById('liveEventCards');
         container.innerHTML = '';
-        
-        const eventKeys = Object.keys(STORE.events);
+        const eventKeys = Object.keys(STATE.events);
         document.getElementById('statEventsCount').innerText = eventKeys.length;
 
         if (eventKeys.length === 0) {
@@ -224,81 +213,55 @@
             return;
         }
 
-        // Access Stats safely using Event Name
-        const eventStats = STORE.stats.events || {};
+        const eventStats = STATE.stats.events || {};
 
         eventKeys.forEach(id => {
-            const evt = STORE.events[id];
-            // Access stats using the event NAME (matching how scanner writes)
-            const stat = eventStats[evt.name] || { in: 0, out: 0, completed: 0 };
+            const evt = STATE.events[id];
+            const stat = eventStats[id] || { in: 0, out: 0, completed: 0 }; // ID based lookup
             
             let html = '';
             if(evt.type === 'ACCESS') {
                 const inC = parseInt(stat.in) || 0;
                 const outC = parseInt(stat.out) || 0;
-                const netC = inC - outC;
-                
-                html = `
-                <div class="row text-center mt-3 g-0">
-                    <div class="col-4 border-end"><div class="live-stat-val text-success">${inC}</div><div class="live-stat-box">IN</div></div>
-                    <div class="col-4 border-end"><div class="live-stat-val text-danger">${outC}</div><div class="live-stat-box">OUT</div></div>
-                    <div class="col-4"><div class="live-stat-val text-primary">${netC}</div><div class="live-stat-box">NET</div></div>
-                </div>`;
+                html = `<div class="row text-center mt-3 g-0"><div class="col-4 border-end"><div class="live-stat-val text-success">${inC}</div><div class="live-stat-box">IN</div></div><div class="col-4 border-end"><div class="live-stat-val text-danger">${outC}</div><div class="live-stat-box">OUT</div></div><div class="col-4"><div class="live-stat-val text-primary">${inC - outC}</div><div class="live-stat-box">NET</div></div></div>`;
             } else {
-                html = `
-                <div class="text-center mt-3">
-                    <div class="live-stat-val text-info" style="font-size:2.5rem;">${stat.completed || 0}</div>
-                    <div class="live-stat-box">COMPLETED</div>
-                </div>`;
+                html = `<div class="text-center mt-3"><div class="live-stat-val text-info" style="font-size:2.5rem;">${stat.completed || 0}</div><div class="live-stat-box">COMPLETED</div></div>`;
             }
 
-            container.innerHTML += `
-            <div class="col-md-4">
-                <div class="stat-card p-4 border-top border-4 border-primary shadow-sm h-100">
-                    <div class="d-flex justify-content-between">
-                        <h5 class="fw-bold mb-0 text-truncate">${evt.name}</h5>
-                        <span class="badge bg-light text-dark border">${evt.type}</span>
-                    </div>
-                    ${html}
-                </div>
-            </div>`;
+            container.innerHTML += `<div class="col-md-4"><div class="stat-card p-4 border-top border-4 border-primary shadow-sm h-100"><div class="d-flex justify-content-between"><h5 class="fw-bold mb-0 text-truncate">${evt.name}</h5><span class="badge bg-light text-dark border">${evt.type}</span></div>${html}</div></div>`;
         });
     }
 
     function renderEventsList() {
         const list = document.getElementById('eventsListContainer');
         list.innerHTML = '';
-        Object.entries(STORE.events).forEach(([id, evt]) => {
-            const delBtn = CURRENT_ROLE === 'admin' ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteEvent('${id}')"><i class="bi bi-trash"></i></button>` : '';
+        Object.entries(STATE.events).forEach(([id, evt]) => {
+            // FIXED: Delete button only shows if Role is loaded AND is Admin
+            const delBtn = (CURRENT_ROLE === 'admin') ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteEvent('${id}')"><i class="bi bi-trash"></i></button>` : '';
             list.innerHTML += `<div class="d-flex justify-content-between align-items-center bg-light p-3 rounded mb-2"><div><b>${evt.name}</b> <small class="text-muted">${evt.type}</small></div>${delBtn}</div>`;
         });
     }
 
-    // =========================================================
-    // ACTIONS
-    // =========================================================
+    // 2. ACTIONS
     window.addNewEvent = async () => {
         const name = document.getElementById('evtName').value.trim();
         const type = document.getElementById('evtType').value;
         if (!name) return Swal.fire('Error', 'Name required', 'error');
-        
         let buttons = type === 'ACCESS' ? ['IN', 'OUT'] : ['SCAN'];
         await push(ref(db, 'events'), { name, type, buttons, active: true, createdAt: Date.now() });
-        Swal.fire('Success', 'Event Created', 'success');
+        Swal.fire('Success', 'Created', 'success');
         document.getElementById('evtName').value = '';
     };
 
     window.deleteEvent = async (id) => {
         if(CURRENT_ROLE !== 'admin') return Swal.fire('Denied', 'Admin Only', 'error');
-        if(confirm('Delete?')) await remove(ref(db, `events/${id}`));
+        if(confirm('Delete this event?')) await remove(ref(db, `events/${id}`));
     };
 
     window.processRegistration = async (print) => {
         const txt = document.getElementById('bulkText').value;
         const lines = txt.split('\n');
-        const up = {}; let c = 0;
-        const list = [];
-
+        const up = {}; let c = 0; const list = [];
         lines.forEach(l => {
             const [id, n] = l.split(',');
             if(id && n) {
@@ -307,7 +270,6 @@
                 c++;
             }
         });
-
         if(c>0) {
             up['stats/total_registered'] = increment(c);
             await update(ref(db), up);
@@ -322,21 +284,17 @@
         const doc = new jsPDF('p','mm','a4');
         const qr = document.getElementById('qr-hidden');
         const w=47.5, h=69, mx=10, my=10;
-
         for(let i=0; i<list.length; i++) {
             const s = list[i];
             if(i>0 && i%16===0) doc.addPage();
             const col = i%4; const row = Math.floor((i%16)/4);
             const x = mx + (col*w); const y = my + (row*h);
-
             doc.rect(x+1, y+1, w-2, h-2);
             doc.setFontSize(9); doc.text("SCOUTPASS", x+w/2, y+8, {align:'center'});
-            
             qr.innerHTML=''; new QRCode(qr, {text:s.id, width:120, height:120});
             await new Promise(r=>setTimeout(r,50));
             const img = qr.querySelector('canvas').toDataURL('image/png');
             doc.addImage(img, 'PNG', x+(w-30)/2, y+15, 30, 30);
-            
             doc.setFontSize(11); doc.text(s.id, x+w/2, y+50, {align:'center'});
             doc.setFontSize(8); doc.text(doc.splitTextToSize(s.name, w-6), x+w/2, y+57, {align:'center'});
         }
@@ -360,16 +318,15 @@
         const tb = document.getElementById('staffTableBody'); tb.innerHTML='';
         if(s.exists()) Object.entries(s.val()).forEach(([uid, u]) => {
             const del = CURRENT_ROLE==='admin' ? `<button class="btn btn-sm btn-danger" onclick="remS('${uid}')">Del</button>`:'';
-            tb.innerHTML += `<tr><td>${u.email}</td><td>${u.role}</td><td><input type="password" value="${u.password}" id="p-${uid}" readonly style="width:80px;border:none"><i class="bi bi-eye ms-2" onclick="togP('${uid}')"></i></td><td>${del}</td></tr>`;
+            tb.innerHTML += `<tr><td>${u.email}</td><td>${u.role}</td><td>***</td><td>${del}</td></tr>`;
         });
     });
 
-    window.togP=(id)=>{const x=document.getElementById('p-'+id);x.type=x.type==='password'?'text':'password'};
     window.remS=async(uid)=>{if(CURRENT_ROLE==='admin'&&confirm('Delete?'))await remove(ref(db,`users/${uid}`))};
     
     window.initiateSystemReset=async()=>{
         const {value:c}=await Swal.fire({title:'Master Key',input:'password'});
-        if(c==='200431504082'){
+        if(c==="200431504082"){
             if((await Swal.fire({title:'Sure?',icon:'warning',showCancelButton:true})).isConfirmed){
                 await update(ref(db),{scouts:null,logs:null,stats:null}); Swal.fire('Done','','success');
             }
@@ -395,13 +352,13 @@
     window.showSection=(id,el)=>{document.querySelectorAll('.section').forEach(s=>s.style.display='none');document.getElementById('sec-'+id).style.display='block';document.querySelectorAll('.nav-link').forEach(n=>n.classList.remove('active'));el.classList.add('active');};
     window.logout=()=>signOut(auth).then(()=>window.location.href="index.html");
 
-    // ATTACH
+    // ATTACH GLOBALS
     window.addNewEvent = addNewEvent; window.deleteEvent = deleteEvent;
     window.processRegistration = processRegistration; window.addStaffMember = addStaffMember;
     window.performSearch = performSearch; window.downloadSingleID = downloadSingleID;
     window.toggleScannerLock = toggleScannerLock; window.initiateSystemReset = initiateSystemReset;
     window.exportScoutsCSV = exportScoutsCSV; window.importCSVFile = importCSVFile;
-    window.togP = toggleP; window.remS = remS;
+    window.remS = remS;
 </script>
 </body>
 </html>
